@@ -8,6 +8,9 @@ from uuid import UUID
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
+# Import the aggregator first so every mapper (including availability models) is
+# registered before the seed queries relationships.
+import app.db.base  # noqa: F401
 from app.core.config import settings
 from app.core.security import hash_password
 from app.db.enums import (
@@ -231,6 +234,7 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
         return
 
     moving_start = _at(3, 8)
+    moving_end = moving_start + timedelta(hours=8)
     moving = Booking(
         booking_number=_next_booking_number(db, moving_start),
         customer_first_name="Jan",
@@ -240,7 +244,7 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
         vehicle_id=_get_vehicle(db, "Master").id,
         service_type=ServiceType.FULL_MOVING,
         start_datetime=moving_start,
-        end_datetime=moving_start + timedelta(hours=8),
+        end_datetime=moving_end,
         status=BookingStatus.PENDING,
         base_price=Decimal("299.00"),
         extras_price=Decimal("1580.00"),
@@ -279,9 +283,21 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
         items_description="Two wardrobes, a sofa, a table and kitchen accessories.",
     )
     moving.assignments = [
-        BookingEmployee(employee_id=_get_employee(db, "Nowak").id),
-        BookingEmployee(employee_id=_get_employee(db, "Lewandowski").id),
-        BookingEmployee(employee_id=_get_employee(db, "Zieliński").id),
+        BookingEmployee(
+            employee_id=_get_employee(db, "Nowak").id,
+            start_datetime=moving_start,
+            end_datetime=moving_end,
+        ),
+        BookingEmployee(
+            employee_id=_get_employee(db, "Lewandowski").id,
+            start_datetime=moving_start,
+            end_datetime=moving_end,
+        ),
+        BookingEmployee(
+            employee_id=_get_employee(db, "Zieliński").id,
+            start_datetime=moving_start,
+            end_datetime=moving_end,
+        ),
     ]
     moving.events = [
         _event(
@@ -353,6 +369,7 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
     ]
 
     transport_start = _at(-8, 9)
+    transport_end = transport_start + timedelta(hours=4)
     transport = Booking(
         booking_number=_next_booking_number(db, transport_start),
         customer_first_name="Marek",
@@ -362,7 +379,7 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
         vehicle_id=_get_vehicle(db, "Transit").id,
         service_type=ServiceType.VAN_DRIVER,
         start_datetime=transport_start,
-        end_datetime=transport_start + timedelta(hours=4),
+        end_datetime=transport_end,
         status=BookingStatus.COMPLETED,
         base_price=Decimal("509.00"),
         extras_price=Decimal("87.50"),
@@ -386,7 +403,13 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
         ),
     ]
     transport.items = [BookingItem(item_name="Washing machine", quantity=1)]
-    transport.assignments = [BookingEmployee(employee_id=_get_employee(db, "Wiśniewski").id)]
+    transport.assignments = [
+        BookingEmployee(
+            employee_id=_get_employee(db, "Wiśniewski").id,
+            start_datetime=transport_start,
+            end_datetime=transport_end,
+        )
+    ]
     transport.events = [
         _event(
             None,

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -18,7 +19,9 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
+from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.enums import (
@@ -59,6 +62,13 @@ class Booking(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_bookings_status", "status"),
         Index("ix_bookings_customer_email", "customer_email"),
         Index("ix_bookings_start_datetime", "start_datetime"),
+        ExcludeConstraint(
+            ("vehicle_id", "="),
+            (text("tstzrange(start_datetime, end_datetime, '[)')"), "&&"),
+            using="gist",
+            where=text("vehicle_id IS NOT NULL AND status NOT IN ('cancelled', 'rejected')"),
+            name="ex_bookings_vehicle_period",
+        ),
     )
 
     booking_number: Mapped[str] = mapped_column(String(20), nullable=False, unique=True)
@@ -154,6 +164,23 @@ class BookingEmployee(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "booking_employees"
     __table_args__ = (
         UniqueConstraint("booking_id", "employee_id", name="uq_booking_employees_pair"),
+        CheckConstraint(
+            "end_datetime > start_datetime",
+            name="ck_booking_employees_time_window_valid",
+        ),
+        Index(
+            "ix_booking_employees_employee_window",
+            "employee_id",
+            "start_datetime",
+            "end_datetime",
+        ),
+        ExcludeConstraint(
+            ("employee_id", "="),
+            (text("tstzrange(start_datetime, end_datetime, '[)')"), "&&"),
+            using="gist",
+            where=text("NOT is_released"),
+            name="ex_booking_employees_period",
+        ),
     )
 
     booking_id: Mapped[UUID] = mapped_column(
@@ -161,6 +188,15 @@ class BookingEmployee(UUIDPrimaryKeyMixin, Base):
     )
     employee_id: Mapped[UUID] = mapped_column(
         ForeignKey("employees.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    # The occupied window is copied from the booking when the assignment is created.
+    # It lets the database reject overlapping assignments with an exclusion constraint.
+    start_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    end_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # Cancelling or rejecting a booking must release its assignments without deleting
+    # the historical record, so the exclusion constraint ignores released rows.
+    is_released: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
     )
     assigned_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

@@ -10,6 +10,7 @@ from app.core.security import hash_password
 from app.db.enums import UserRole
 from app.db.session import SessionLocal
 from app.main import app
+from app.modules.bookings.models import Booking
 from app.modules.employees.models import Employee
 from app.modules.users.models import User
 from app.modules.vehicles.models import Vehicle
@@ -69,11 +70,15 @@ def auth_headers(client: TestClient, provider_account: ProviderAccount) -> dict[
 
 @pytest.fixture
 def created_resources() -> Iterator[dict[str, list[UUID]]]:
-    resources: dict[str, list[UUID]] = {"vehicles": [], "employees": []}
+    resources: dict[str, list[UUID]] = {"vehicles": [], "employees": [], "bookings": []}
     yield resources
     with SessionLocal() as db:
-        if resources["vehicles"]:
-            db.execute(delete(Vehicle).where(Vehicle.id.in_(resources["vehicles"])))
+        # Assignments disappear with their booking (ON DELETE CASCADE), so remove
+        # bookings before employees and vehicles.
+        if resources["bookings"]:
+            db.execute(delete(Booking).where(Booking.id.in_(resources["bookings"])))
         if resources["employees"]:
             db.execute(delete(Employee).where(Employee.id.in_(resources["employees"])))
+        if resources["vehicles"]:
+            db.execute(delete(Vehicle).where(Vehicle.id.in_(resources["vehicles"])))
         db.commit()

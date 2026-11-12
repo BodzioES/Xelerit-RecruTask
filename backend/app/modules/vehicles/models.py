@@ -10,6 +10,7 @@ from app.db.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.session import Base
 
 if TYPE_CHECKING:
+    from app.modules.availability.models import VehicleUnavailability
     from app.modules.bookings.models import Booking
 
 
@@ -40,6 +41,9 @@ class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     bookings: Mapped[list[Booking]] = relationship(back_populates="vehicle")
+    unavailability: Mapped[list[VehicleUnavailability]] = relationship(
+        back_populates="vehicle", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"Vehicle(id={self.id!r}, brand={self.brand!r}, model={self.model!r})"

@@ -1,6 +1,7 @@
 """Import aggregator so Alembic can discover every model on Base.metadata."""
 
 from app.db.session import Base
+from app.modules.availability.models import EmployeeUnavailability, VehicleUnavailability
 from app.modules.bookings.models import (
     Booking,
     BookingEmployee,
@@ -24,8 +25,10 @@ __all__ = [
     "BookingLocation",
     "BookingMovingDetails",
     "Employee",
+    "EmployeeUnavailability",
     "HandoverRecord",
     "PricingRule",
     "User",
     "Vehicle",
+    "VehicleUnavailability",
 ]

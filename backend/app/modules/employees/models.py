@@ -11,6 +11,7 @@ from app.db.session import Base
 from app.db.types import enum_type
 
 if TYPE_CHECKING:
+    from app.modules.availability.models import EmployeeUnavailability
     from app.modules.bookings.models import BookingEmployee
 
 
@@ -28,6 +29,9 @@ class Employee(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     assignments: Mapped[list[BookingEmployee]] = relationship(back_populates="employee")
+    unavailability: Mapped[list[EmployeeUnavailability]] = relationship(
+        back_populates="employee", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return (

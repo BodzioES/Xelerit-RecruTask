@@ -14,7 +14,7 @@ end-to-end booking process — not a feature-rich commercial system.
 | 1 | Docker Compose, FastAPI + PostgreSQL + React pipeline | Done |
 | 2 | Database models, Alembic migrations, demo seed | Done |
 | 3 | Provider auth, vehicle and employee management | Done |
-| 4 | Availability engine (vehicles, employees, buffers, concurrency) | Planned |
+| 4 | Availability engine (vehicles, employees, buffers, concurrency) | Done |
 | 5 | Pricing engine | Planned |
 | 6 | Locations, map integration, service-area validation | Planned |
 | 7 | Bookings, guest access, statuses, handover | Planned |
@@ -153,6 +153,49 @@ validated against the `provider` role; guest and customer routes stay public.
 | POST | `/api/v1/provider/employees` | Provider | Add an employee |
 | PATCH | `/api/v1/provider/employees/{id}` | Provider | Edit, reactivate or change a role |
 | DELETE | `/api/v1/provider/employees/{id}` | Provider | Deactivate an employee |
+| GET | `/api/v1/availability/vehicles` | — | Vehicles free for a time window |
+| GET | `/api/v1/availability/employees` | — | Employees free for a time window |
+| POST | `/api/v1/availability/check` | — | Check one vehicle and a set of employees |
+| GET | `/api/v1/provider/employees/availability` | Provider | Same employee check for the Provider panel |
+| GET | `/api/v1/provider/vehicles/{id}/unavailability` | Provider | Vehicle downtime periods |
+| POST | `/api/v1/provider/vehicles/{id}/unavailability` | Provider | Block a vehicle (service, repair) |
+| DELETE | `/api/v1/provider/vehicles/{id}/unavailability/{blockId}` | Provider | Remove a downtime period |
+| GET | `/api/v1/provider/employees/{id}/unavailability` | Provider | Employee unavailability periods |
+| POST | `/api/v1/provider/employees/{id}/unavailability` | Provider | Block an employee (leave, training) |
+| DELETE | `/api/v1/provider/employees/{id}/unavailability/{blockId}` | Provider | Remove an employee block |
+
+### Availability rules
+
+- Time windows are half-open (`start` inclusive, `end` exclusive) and must include a
+  timezone offset. Naive datetimes and inverted windows return `422`.
+- A booking occupies its resource for the whole window. Cancelled and rejected bookings
+  release it again; other statuses keep it.
+- `RESOURCE_BUFFER_MINUTES` (default `60`) is the required gap between two bookings of the
+  same vehicle or employee. Downtime blocks are exact and do not add the buffer.
+- Availability is checked at search time and must be checked again inside the booking
+  transaction. PostgreSQL `EXCLUDE USING GIST` constraints on `bookings`,
+  `booking_employees`, `vehicle_unavailability` and `employee_unavailability` are the final
+  guard, so two concurrent requests can never double-book the same resource.
+- Only active vehicles and employees are returned by the public availability endpoints.
+  Capacity filters (`min_cargo_volume`, `min_payload`, `min_seats`) are optional.
+
+Example:
+
+```bash
+curl "http://localhost:8000/api/v1/availability/vehicles?\
+start_datetime=2027-05-10T10:00:00Z&end_datetime=2027-05-10T14:00:00Z&min_cargo_volume=11"
+```
+
+```bash
+curl -X POST http://localhost:8000/api/v1/availability/check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_datetime": "2027-05-10T10:00:00Z",
+    "end_datetime": "2027-05-10T14:00:00Z",
+    "vehicle_id": "<vehicle-id>",
+    "employee_ids": ["<employee-id>"]
+  }'
+```
 
 ## Known MVP limitations
 
