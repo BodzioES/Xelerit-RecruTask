@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     resource_buffer_minutes: int = 60
     max_moving_helpers: int = 4
     service_area_radius_km: float = 30.0
+    # Sopot pier: a central reference point for the Trójmiasto service area.
+    service_area_center_latitude: float = 54.4416
+    service_area_center_longitude: float = 18.5601
 
     @property
     def cors_origin_list(self) -> list[str]:

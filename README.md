@@ -16,7 +16,7 @@ end-to-end booking process — not a feature-rich commercial system.
 | 3 | Provider auth, vehicle and employee management | Done |
 | 4 | Availability engine (vehicles, employees, buffers, concurrency) | Done |
 | 5 | Pricing engine | Done |
-| 6 | Locations, map integration, service-area validation | Planned |
+| 6 | Locations, map integration, service-area validation | Done |
 | 7 | Bookings, guest access, statuses, handover | Planned |
 | 8–10 | Frontend: landing page, booking wizard, confirmation | Planned |
 | 11 | Provider panel | Planned |
@@ -108,8 +108,9 @@ docker compose run --rm backend alembic current
 All configuration lives in `.env` (see `.env.example`). Never commit `.env` or API keys.
 The seeded provider account is created from `PROVIDER_EMAIL` / `PROVIDER_PASSWORD`.
 
-Geoapify is optional during development: when `GEOAPIFY_API_KEY` is empty, the backend falls
-back to a haversine-based distance estimate and reports it in the API response.
+Geoapify geocoding requires `GEOAPIFY_API_KEY`. When the key is empty, address search and
+reverse geocoding return `503`, while `/locations/validate` and pricing keep working. Pricing
+distance uses a haversine estimate until the routing provider is wired in.
 
 ## Testing
 
@@ -164,6 +165,9 @@ validated against the `provider` role; guest and customer routes stay public.
 | POST | `/api/v1/provider/employees/{id}/unavailability` | Provider | Block an employee (leave, training) |
 | DELETE | `/api/v1/provider/employees/{id}/unavailability/{blockId}` | Provider | Remove an employee block |
 | POST | `/api/v1/pricing/quote` | — | Server-side price quote with a line-item breakdown |
+| GET | `/api/v1/locations/search?q=` | — | Address suggestions from Geoapify |
+| GET | `/api/v1/locations/reverse?lat=&lng=` | — | Address for a map point |
+| POST | `/api/v1/locations/validate` | — | Check whether a point is inside the service area |
 
 ### Availability rules
 
@@ -249,6 +253,40 @@ curl -X POST http://localhost:8000/api/v1/pricing/quote \
   }'
 ```
 
+### Locations and service area
+
+The frontend can resolve an address in two ways: type it and pick a suggestion
+(`GET /locations/search`) or click the map and reverse-geocode the point
+(`GET /locations/reverse`). Both endpoints proxy Geoapify and return normalized
+`address`, `latitude`, `longitude`, `place_id`, `city` and `country` fields. Search results
+are biased towards the configured service-area center and limited to 10 items.
+
+Every result also contains `in_service_area` and `distance_from_center_km`. The same check is
+available standalone through `POST /locations/validate`, which works without a Geoapify key
+and returns the configured `radius_km`. This endpoint is the server-side gate for the booking
+area; the frontend only displays the result.
+
+The service area is a circle centred on Sopot pier by default. It is configured with
+`SERVICE_AREA_CENTER_LATITUDE`, `SERVICE_AREA_CENTER_LONGITUDE` and
+`SERVICE_AREA_RADIUS_KM` (default `30` km). Distances use the haversine formula and are
+rounded to 0.01 km.
+
+Provider responses are validated before they reach the client. Malformed payloads, provider
+errors and timeouts return `502`; a missing `GEOAPIFY_API_KEY` returns `503`; an empty reverse
+geocoding result returns `404`.
+
+Example:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/locations/validate \
+  -H "Content-Type: application/json" \
+  -d '{"latitude": 54.4416, "longitude": 18.5601}'
+```
+
+```bash
+curl "http://localhost:8000/api/v1/locations/search?q=Gda%C5%84sk%20Wrzeszcz&limit=5"
+```
+
 ## Known MVP limitations
 
 - Guest bookings only (no customer accounts in the MVP).
@@ -259,6 +297,8 @@ curl -X POST http://localhost:8000/api/v1/pricing/quote \
 - Item lists and descriptions are booking data; the MVP price does not vary by item count
   or item type. The quote covers the service, duration, vehicle, distance, helpers, floors,
   elevator access and the optional additional service.
+- Address search and reverse geocoding need a Geoapify key. Without it, locations can still
+  be validated, and the frontend can fall back to manual coordinates.
 
 ## AI usage
 
