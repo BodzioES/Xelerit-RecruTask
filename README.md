@@ -13,7 +13,7 @@ end-to-end booking process — not a feature-rich commercial system.
 | 0 | Repository skeleton, tooling, environment template | Done |
 | 1 | Docker Compose, FastAPI + PostgreSQL + React pipeline | Done |
 | 2 | Database models, Alembic migrations, demo seed | Done |
-| 3 | Provider auth, vehicle and employee management | Planned |
+| 3 | Provider auth, vehicle and employee management | Done |
 | 4 | Availability engine (vehicles, employees, buffers, concurrency) | Planned |
 | 5 | Pricing engine | Planned |
 | 6 | Locations, map integration, service-area validation | Planned |
@@ -124,6 +124,35 @@ FastAPI exposes OpenAPI 3.1 automatically:
 - Swagger UI: `/docs`
 - ReDoc: `/redoc`
 - Schema: `/openapi.json`
+
+### Provider authentication
+
+The seeded Provider logs in with `PROVIDER_EMAIL` / `PROVIDER_PASSWORD`:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "provider@moveit.local", "password": "provider123"}'
+```
+
+The response contains a bearer token valid for `ACCESS_TOKEN_EXPIRE_MINUTES`. Send it as
+`Authorization: Bearer <token>` to every `/api/v1/provider/...` endpoint. The token is
+validated against the `provider` role; guest and customer routes stay public.
+
+| Method | Endpoint | Auth | Purpose |
+| --- | --- | --- | --- |
+| POST | `/api/v1/auth/login` | — | Obtain a Provider token |
+| GET | `/api/v1/auth/me` | Provider | Current Provider profile |
+| GET | `/api/v1/vehicles` | — | Active vehicles (public catalog) |
+| GET | `/api/v1/vehicles/{id}` | — | Active vehicle details |
+| GET | `/api/v1/provider/vehicles` | Provider | Full fleet, including inactive |
+| POST | `/api/v1/provider/vehicles` | Provider | Add a vehicle |
+| PATCH | `/api/v1/provider/vehicles/{id}` | Provider | Edit or reactivate a vehicle |
+| DELETE | `/api/v1/provider/vehicles/{id}` | Provider | Deactivate a vehicle |
+| GET | `/api/v1/provider/employees` | Provider | List employees, including inactive |
+| POST | `/api/v1/provider/employees` | Provider | Add an employee |
+| PATCH | `/api/v1/provider/employees/{id}` | Provider | Edit, reactivate or change a role |
+| DELETE | `/api/v1/provider/employees/{id}` | Provider | Deactivate an employee |
 
 ## Known MVP limitations
 

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://moveit:moveit@localhost:5433/moveit"
 
-    jwt_secret: str = "change-me"
+    jwt_secret: str = "dev-only-secret-change-me-before-deploying-32chars"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 480
 
