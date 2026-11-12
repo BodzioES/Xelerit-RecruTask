@@ -1,3 +1,6 @@
+# Local task specification (not part of the public repository)
+/tresc-projektu.md
+
 # Environment
 .env
 .env.*
