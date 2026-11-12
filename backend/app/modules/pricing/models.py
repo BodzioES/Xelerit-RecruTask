@@ -16,9 +16,7 @@ class PricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("hourly_rate >= 0", name="ck_pricing_rules_hourly_rate_non_negative"),
         CheckConstraint("daily_rate >= 0", name="ck_pricing_rules_daily_rate_non_negative"),
         CheckConstraint("price_per_km >= 0", name="ck_pricing_rules_price_per_km_non_negative"),
-        CheckConstraint(
-            "helper_rate >= 0", name="ck_pricing_rules_helper_rate_non_negative"
-        ),
+        CheckConstraint("helper_rate >= 0", name="ck_pricing_rules_helper_rate_non_negative"),
         CheckConstraint(
             "floor_surcharge >= 0",
             name="ck_pricing_rules_floor_surcharge_non_negative",
@@ -31,9 +29,7 @@ class PricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             "additional_service_price >= 0",
             name="ck_pricing_rules_additional_service_price_non_negative",
         ),
-        CheckConstraint(
-            "min_duration_hours > 0", name="ck_pricing_rules_min_duration_positive"
-        ),
+        CheckConstraint("min_duration_hours > 0", name="ck_pricing_rules_min_duration_positive"),
     )
 
     service_type: Mapped[ServiceType] = mapped_column(

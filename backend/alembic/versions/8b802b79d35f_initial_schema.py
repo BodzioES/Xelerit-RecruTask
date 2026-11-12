@@ -153,16 +153,12 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint("helper_rate >= 0", name="ck_pricing_rules_helper_rate_non_negative"),
         sa.CheckConstraint("hourly_rate >= 0", name="ck_pricing_rules_hourly_rate_non_negative"),
-        sa.CheckConstraint(
-            "min_duration_hours > 0", name="ck_pricing_rules_min_duration_positive"
-        ),
+        sa.CheckConstraint("min_duration_hours > 0", name="ck_pricing_rules_min_duration_positive"),
         sa.CheckConstraint(
             "no_elevator_surcharge >= 0",
             name="ck_pricing_rules_no_elevator_surcharge_non_negative",
         ),
-        sa.CheckConstraint(
-            "price_per_km >= 0", name="ck_pricing_rules_price_per_km_non_negative"
-        ),
+        sa.CheckConstraint("price_per_km >= 0", name="ck_pricing_rules_price_per_km_non_negative"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("service_type"),
     )
@@ -271,9 +267,7 @@ def upgrade() -> None:
             "distance_km IS NULL OR distance_km >= 0", name="ck_bookings_distance_non_negative"
         ),
         sa.CheckConstraint("duration_minutes > 0", name="ck_bookings_duration_positive"),
-        sa.CheckConstraint(
-            "end_datetime > start_datetime", name="ck_bookings_time_window_valid"
-        ),
+        sa.CheckConstraint("end_datetime > start_datetime", name="ck_bookings_time_window_valid"),
         sa.CheckConstraint("extras_price >= 0", name="ck_bookings_extras_price_non_negative"),
         sa.CheckConstraint("total_price >= 0", name="ck_bookings_total_price_non_negative"),
         sa.ForeignKeyConstraint(["customer_id"], ["users.id"], ondelete="SET NULL"),
@@ -281,12 +275,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("booking_number"),
     )
-    op.create_index(
-        "ix_bookings_customer_email", "bookings", ["customer_email"], unique=False
-    )
-    op.create_index(
-        "ix_bookings_start_datetime", "bookings", ["start_datetime"], unique=False
-    )
+    op.create_index("ix_bookings_customer_email", "bookings", ["customer_email"], unique=False)
+    op.create_index("ix_bookings_start_datetime", "bookings", ["start_datetime"], unique=False)
     op.create_index("ix_bookings_status", "bookings", ["status"], unique=False)
     op.create_index(
         "ix_bookings_vehicle_window",
@@ -376,9 +366,7 @@ def upgrade() -> None:
         sa.Column("instructions", sa.Text(), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.CheckConstraint("latitude BETWEEN -90 AND 90", name="ck_booking_locations_latitude"),
-        sa.CheckConstraint(
-            "longitude BETWEEN -180 AND 180", name="ck_booking_locations_longitude"
-        ),
+        sa.CheckConstraint("longitude BETWEEN -180 AND 180", name="ck_booking_locations_longitude"),
         sa.ForeignKeyConstraint(["booking_id"], ["bookings.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("booking_id", "location_type", name="uq_booking_locations_type"),
@@ -443,20 +431,14 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("handover_records")
     op.drop_table("booking_moving_details")
-    op.drop_index(
-        op.f("ix_booking_locations_booking_id"), table_name="booking_locations"
-    )
+    op.drop_index(op.f("ix_booking_locations_booking_id"), table_name="booking_locations")
     op.drop_table("booking_locations")
     op.drop_index(op.f("ix_booking_items_booking_id"), table_name="booking_items")
     op.drop_table("booking_items")
     op.drop_index("ix_booking_events_booking_created", table_name="booking_events")
     op.drop_table("booking_events")
-    op.drop_index(
-        op.f("ix_booking_employees_employee_id"), table_name="booking_employees"
-    )
-    op.drop_index(
-        op.f("ix_booking_employees_booking_id"), table_name="booking_employees"
-    )
+    op.drop_index(op.f("ix_booking_employees_employee_id"), table_name="booking_employees")
+    op.drop_index(op.f("ix_booking_employees_booking_id"), table_name="booking_employees")
     op.drop_table("booking_employees")
     op.drop_index("ix_bookings_vehicle_window", table_name="bookings")
     op.drop_index("ix_bookings_status", table_name="bookings")

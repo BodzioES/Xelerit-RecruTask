@@ -54,9 +54,7 @@ class Booking(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             "distance_km IS NULL OR distance_km >= 0",
             name="ck_bookings_distance_non_negative",
         ),
-        CheckConstraint(
-            "duration_minutes > 0", name="ck_bookings_duration_positive"
-        ),
+        CheckConstraint("duration_minutes > 0", name="ck_bookings_duration_positive"),
         Index("ix_bookings_vehicle_window", "vehicle_id", "start_datetime", "end_datetime"),
         Index("ix_bookings_status", "status"),
         Index("ix_bookings_customer_email", "customer_email"),
@@ -134,9 +132,7 @@ class BookingLocation(UUIDPrimaryKeyMixin, Base):
     __table_args__ = (
         UniqueConstraint("booking_id", "location_type", name="uq_booking_locations_type"),
         CheckConstraint("latitude BETWEEN -90 AND 90", name="ck_booking_locations_latitude"),
-        CheckConstraint(
-            "longitude BETWEEN -180 AND 180", name="ck_booking_locations_longitude"
-        ),
+        CheckConstraint("longitude BETWEEN -180 AND 180", name="ck_booking_locations_longitude"),
     )
 
     booking_id: Mapped[UUID] = mapped_column(
@@ -176,9 +172,7 @@ class BookingEmployee(UUIDPrimaryKeyMixin, Base):
 
 class BookingItem(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "booking_items"
-    __table_args__ = (
-        CheckConstraint("quantity > 0", name="ck_booking_items_quantity_positive"),
-    )
+    __table_args__ = (CheckConstraint("quantity > 0", name="ck_booking_items_quantity_positive"),)
 
     booking_id: Mapped[UUID] = mapped_column(
         ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False, index=True
@@ -224,9 +218,7 @@ class BookingMovingDetails(UUIDPrimaryKeyMixin, Base):
 
 class BookingEvent(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "booking_events"
-    __table_args__ = (
-        Index("ix_booking_events_booking_created", "booking_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_booking_events_booking_created", "booking_id", "created_at"),)
 
     booking_id: Mapped[UUID] = mapped_column(
         ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False
