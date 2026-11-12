@@ -12,8 +12,10 @@ from app.db.session import SessionLocal
 from app.main import app
 from app.modules.bookings.models import Booking
 from app.modules.employees.models import Employee
+from app.modules.pricing.models import PricingRule
 from app.modules.users.models import User
 from app.modules.vehicles.models import Vehicle
+from tests.pricing_helpers import PRICING_FIELDS, RULE_VALUES
 
 PROVIDER_EMAIL = "pytest-provider@moveit.local"
 PROVIDER_PASSWORD = "pytest-provider-password"
@@ -81,4 +83,42 @@ def created_resources() -> Iterator[dict[str, list[UUID]]]:
             db.execute(delete(Employee).where(Employee.id.in_(resources["employees"])))
         if resources["vehicles"]:
             db.execute(delete(Vehicle).where(Vehicle.id.in_(resources["vehicles"])))
+        db.commit()
+
+
+@pytest.fixture
+def pricing_rules() -> Iterator[None]:
+    """Install deterministic rules and restore the previous configuration afterwards."""
+    with SessionLocal() as db:
+        existing = {rule.service_type: rule for rule in db.scalars(select(PricingRule))}
+        snapshots = {
+            service_type: {field: getattr(rule, field) for field in PRICING_FIELDS}
+            for service_type, rule in existing.items()
+        }
+        created: list[PricingRule] = []
+        for service_type, values in RULE_VALUES.items():
+            rule = existing.get(service_type)
+            if rule is None:
+                rule = PricingRule(service_type=service_type, **values)
+                db.add(rule)
+                created.append(rule)
+                continue
+            for field, value in values.items():
+                setattr(rule, field, value)
+        db.flush()
+        created_ids = [rule.id for rule in created]
+        db.commit()
+
+    yield
+
+    with SessionLocal() as db:
+        if created_ids:
+            db.execute(delete(PricingRule).where(PricingRule.id.in_(created_ids)))
+        for service_type, values in snapshots.items():
+            rule = db.scalar(select(PricingRule).where(PricingRule.service_type == service_type))
+            if rule is None:
+                db.add(PricingRule(service_type=service_type, **values))
+                continue
+            for field, value in values.items():
+                setattr(rule, field, value)
         db.commit()

@@ -15,7 +15,7 @@ end-to-end booking process — not a feature-rich commercial system.
 | 2 | Database models, Alembic migrations, demo seed | Done |
 | 3 | Provider auth, vehicle and employee management | Done |
 | 4 | Availability engine (vehicles, employees, buffers, concurrency) | Done |
-| 5 | Pricing engine | Planned |
+| 5 | Pricing engine | Done |
 | 6 | Locations, map integration, service-area validation | Planned |
 | 7 | Bookings, guest access, statuses, handover | Planned |
 | 8–10 | Frontend: landing page, booking wizard, confirmation | Planned |
@@ -163,6 +163,7 @@ validated against the `provider` role; guest and customer routes stay public.
 | GET | `/api/v1/provider/employees/{id}/unavailability` | Provider | Employee unavailability periods |
 | POST | `/api/v1/provider/employees/{id}/unavailability` | Provider | Block an employee (leave, training) |
 | DELETE | `/api/v1/provider/employees/{id}/unavailability/{blockId}` | Provider | Remove an employee block |
+| POST | `/api/v1/pricing/quote` | — | Server-side price quote with a line-item breakdown |
 
 ### Availability rules
 
@@ -197,6 +198,57 @@ curl -X POST http://localhost:8000/api/v1/availability/check \
   }'
 ```
 
+### Pricing rules
+
+`POST /api/v1/pricing/quote` returns the total and every component that produced it. The
+frontend renders the result and never calculates a final price itself. Quotes are stateless;
+booking creation recalculates the price from the same rules inside its transaction.
+
+| Field | Applies to | Meaning |
+| --- | --- | --- |
+| `service_type` | all | `self_drive`, `van_driver` or `full_moving` |
+| `start_datetime`, `end_datetime` | all | Requested window; duration is rounded up to whole hours |
+| `vehicle_id` | optional | Vehicle-specific hourly/daily rates for Self Drive |
+| `origin`, `destination` | optional | Coordinates used to derive the billable distance |
+| `helpers` | Full Moving | Number of movers (maximum from `MAX_MOVING_HELPERS`) |
+| `floor`, `has_elevator` | Full Moving | Floor surcharge and no-elevator surcharge |
+| `additional_service` | all | Adds the flat additional-service price from the rule |
+
+- The rule for each service type lives in `pricing_rules` and is seeded with demo values.
+  `min_duration_hours` is a billing minimum: shorter requests are charged for the minimum.
+- Self Drive uses the selected vehicle's hourly/daily rates when available. Rentals under
+  24 hours are billed hourly; longer rentals use full days plus leftover hours, capped so
+  leftover hours never cost more than another full day. Route distance is returned but never
+  charged, because a different return point is not an automatic surcharge.
+- Van + Driver bills the base fee, billable hours and route distance.
+- Full Moving bills the same components plus helpers, floor surcharges, the no-elevator
+  surcharge and an optional additional service.
+- Distance is calculated by the backend from coordinates. Until the Geoapify routing
+  provider is wired in, the backend uses a straight-line haversine estimate, so the final
+  driving distance may be longer. The client never sends a billable distance.
+- `floor`, `has_elevator` and `helpers` are rejected outside Full Moving. When `floor` is
+  above ground, `has_elevator` is required. `origin` and `destination` must be sent together.
+- All amounts are in PLN, use `Decimal` arithmetic and are rounded to grosze. The sum of the
+  `lines` always equals `total`.
+
+Example:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/pricing/quote \
+  -H "Content-Type: application/json" \
+  -d '{
+    "service_type": "full_moving",
+    "start_datetime": "2027-05-10T08:00:00Z",
+    "end_datetime": "2027-05-10T16:00:00Z",
+    "origin": {"latitude": 54.352000, "longitude": 18.646600},
+    "destination": {"latitude": 54.441800, "longitude": 18.560100},
+    "helpers": 3,
+    "floor": 2,
+    "has_elevator": false,
+    "additional_service": true
+  }'
+```
+
 ## Known MVP limitations
 
 - Guest bookings only (no customer accounts in the MVP).
@@ -204,6 +256,9 @@ curl -X POST http://localhost:8000/api/v1/availability/check \
 - The vehicle lockbox is physical: the backend generates and stores a 6-digit code, but the
   driver sets it manually.
 - No separate admin role — the Provider manages all company resources.
+- Item lists and descriptions are booking data; the MVP price does not vary by item count
+  or item type. The quote covers the service, duration, vehicle, distance, helpers, floors,
+  elevator access and the optional additional service.
 
 ## AI usage
 

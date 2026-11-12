@@ -19,6 +19,14 @@ class ForbiddenError(AppError):
     status_code = 403
 
 
+class ValidationError(AppError):
+    status_code = 400
+
+
+class ConfigurationError(AppError):
+    status_code = 500
+
+
 class NotFoundError(AppError):
     status_code = 404
 
