@@ -19,8 +19,8 @@ end-to-end booking process — not a feature-rich commercial system.
 | 6 | Locations, map integration, service-area validation | Done |
 | 7 | Bookings, guest access, statuses, handover | Done |
 | 8–10 | Frontend: landing page, booking wizard, confirmation | Done |
-| 11 | Provider panel | Planned |
-| 12 | Tests, documentation, demo assets | Planned |
+| 11 | Provider panel | Done |
+| 12 | Tests, documentation, demo assets | In progress |
 
 ## Stack
 
@@ -183,7 +183,7 @@ validated against the `provider` role; guest and customer routes stay public.
 | GET | `/api/v1/bookings/{id}` | Guest token or Provider | Booking details |
 | PATCH | `/api/v1/bookings/{id}/cancel` | Guest token | Cancel a booking before it starts |
 | GET | `/api/v1/provider/dashboard` | Provider | New, upcoming and active bookings plus available vehicles |
-| GET | `/api/v1/provider/bookings` | Provider | Paginated booking list with status and service filters |
+| GET | `/api/v1/provider/bookings` | Provider | Paginated booking list with status, service and assigned-employee filters |
 | PATCH | `/api/v1/provider/bookings/{id}/status` | Provider | Controlled status transition |
 | POST | `/api/v1/provider/bookings/{id}/assign-resources` | Provider | Reassign the vehicle and staff |
 | POST | `/api/v1/bookings/{id}/handover` | Provider | Generate a lockbox code and set handover instructions |
@@ -370,6 +370,12 @@ The SPA is served by nginx with an `/index.html` fallback, so deep links can be 
 | `/` | Landing page: short explanation, the three services and the service-area note |
 | `/book/{self-drive,van-driver,full-moving}` | Step-by-step booking wizard |
 | `/booking/{id}?token=…` | Booking confirmation, status timeline, cancellation and handover |
+| `/provider/login` | Provider sign-in |
+| `/provider` | Dashboard: new, upcoming and active bookings plus available vehicles |
+| `/provider/bookings` | Booking list with status, service and assigned-employee filters |
+| `/provider/bookings/{id}` | Booking detail: timeline, status actions, resource assignment, handover |
+| `/provider/vehicles` | Fleet management (add, edit, deactivate, downtime blocks) |
+| `/provider/employees` | Employee management (add, edit, deactivate, unavailability blocks) |
 
 The wizard keeps its own draft state and renders only the current step: service → date and
 locations → vehicle → job details → helpers (Full Moving only) → quote → customer details →
@@ -387,6 +393,13 @@ page also keeps it in `sessionStorage` so a reload of the same tab keeps working
 the status badge, the recorded status timeline and, for Self Drive, the lockbox code once the
 Provider has prepared it. A guest can cancel a booking while it is `pending`, `confirmed` or
 `ready_for_pickup`.
+
+The Provider panel lives under `/provider/*` with its own layout, auth guard and lazy-loaded
+chunks; feature code stays in `features/provider/*`. The login token is stored in
+`sessionStorage` (`moveit.provider.token`) and attached to every request as a bearer header. A
+401 response clears the session and returns to the sign-in page. The booking detail reuses the
+customer-side presentation components with provider-facing wording, so statuses, timeline and
+handover are rendered from one set of components on both sides.
 
 ## Known MVP limitations
 
