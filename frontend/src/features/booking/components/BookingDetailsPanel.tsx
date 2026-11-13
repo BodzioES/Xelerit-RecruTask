@@ -1,5 +1,5 @@
 import Panel from "@/components/ui/Panel";
-import SummaryRow from "@/features/booking/components/SummaryRow";
+import SummaryRow from "@/components/ui/SummaryRow";
 import { formatDateTime } from "@/lib/datetime";
 import { formatQuantity } from "@/lib/money";
 import { serviceByType } from "@/lib/services";

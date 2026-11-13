@@ -17,7 +17,7 @@ import {
 } from "../draft";
 import type { WizardStepProps } from "../steps";
 import QuoteBreakdown from "./QuoteBreakdown";
-import SummaryRow from "./SummaryRow";
+import SummaryRow from "@/components/ui/SummaryRow";
 import WizardFooter from "./WizardFooter";
 
 export type SummaryStepProps = WizardStepProps & {

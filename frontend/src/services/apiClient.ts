@@ -115,3 +115,7 @@ export function apiPatch<T>(path: string, body?: unknown, init?: RequestInit): P
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 }
+
+export function apiDelete<T = void>(path: string, init?: RequestInit): Promise<T> {
+  return request<T>(path, { ...init, method: "DELETE" });
+}

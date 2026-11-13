@@ -190,3 +190,85 @@ export type HandoverDetails = {
   created_at: string;
   updated_at: string;
 };
+
+export type ProviderProfile = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: "provider";
+};
+
+export type ProviderLoginResponse = {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: ProviderProfile;
+};
+
+export type ProviderVehicle = {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  category: string;
+  cargo_volume: DecimalString;
+  payload: number;
+  seats: number;
+  description: string | null;
+  image_url: string | null;
+  hourly_price: DecimalString;
+  daily_price: DecimalString;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProviderEmployee = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: EmployeeRole;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BookingSummary = {
+  id: string;
+  booking_number: string;
+  service_type: ServiceType;
+  status: BookingStatus;
+  customer_first_name: string;
+  customer_last_name: string;
+  start_datetime: string;
+  end_datetime: string;
+  total_price: DecimalString;
+  vehicle: BookingVehicle | null;
+};
+
+export type ProviderDashboard = {
+  new_bookings: BookingSummary[];
+  upcoming_bookings: BookingSummary[];
+  active_bookings: BookingSummary[];
+  available_vehicles: BookingVehicle[];
+};
+
+export type VehicleUnavailabilityBlock = {
+  id: string;
+  vehicle_id: string;
+  start_datetime: string;
+  end_datetime: string;
+  reason: string | null;
+  created_at: string;
+};
+
+export type EmployeeUnavailabilityBlock = {
+  id: string;
+  employee_id: string;
+  start_datetime: string;
+  end_datetime: string;
+  reason: string | null;
+  created_at: string;
+};
+
