@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     geoapify_api_key: str = ""
     resource_buffer_minutes: int = 60
     max_moving_helpers: int = 4
+    # The lockbox code must be recoverable, so it is encrypted (not hashed).
+    # Changing this value makes previously generated codes unreadable.
+    handover_encryption_key: str = "dev-only-handover-key-change-me"
     service_area_radius_km: float = 30.0
     # Sopot pier: a central reference point for the Trójmiasto service area.
     service_area_center_latitude: float = 54.4416

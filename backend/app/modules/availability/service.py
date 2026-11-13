@@ -44,6 +44,7 @@ def list_available_vehicles(
     min_cargo_volume: Decimal | None = None,
     min_payload: int | None = None,
     min_seats: int | None = None,
+    exclude_booking_id: UUID | None = None,
 ) -> list[Vehicle]:
     buffer = buffer_delta()
     busy_bookings = select(Booking.vehicle_id).where(
@@ -52,6 +53,8 @@ def list_available_vehicles(
         Booking.start_datetime < end + buffer,
         Booking.end_datetime > start - buffer,
     )
+    if exclude_booking_id is not None:
+        busy_bookings = busy_bookings.where(Booking.id != exclude_booking_id)
     busy_blocks = select(VehicleUnavailability.vehicle_id).where(
         VehicleUnavailability.start_datetime < end,
         VehicleUnavailability.end_datetime > start,
@@ -79,6 +82,7 @@ def list_available_employees(
     end: datetime,
     *,
     role: EmployeeRole | None = None,
+    exclude_booking_id: UUID | None = None,
 ) -> list[Employee]:
     buffer = buffer_delta()
     busy_assignments = (
@@ -91,6 +95,8 @@ def list_available_employees(
             BookingEmployee.end_datetime > start - buffer,
         )
     )
+    if exclude_booking_id is not None:
+        busy_assignments = busy_assignments.where(BookingEmployee.booking_id != exclude_booking_id)
     busy_blocks = select(EmployeeUnavailability.employee_id).where(
         EmployeeUnavailability.start_datetime < end,
         EmployeeUnavailability.end_datetime > start,
@@ -115,29 +121,36 @@ def check_availability(
     *,
     vehicle_id: UUID | None,
     employee_ids: list[UUID],
+    exclude_booking_id: UUID | None = None,
 ) -> AvailabilityCheckResult:
-    vehicle_result = _check_vehicle(db, start, end, vehicle_id) if vehicle_id else None
-    employee_results = _check_employees(db, start, end, employee_ids)
+    vehicle_result = (
+        _check_vehicle(db, start, end, vehicle_id, exclude_booking_id) if vehicle_id else None
+    )
+    employee_results = _check_employees(db, start, end, employee_ids, exclude_booking_id)
     return AvailabilityCheckResult(vehicle=vehicle_result, employees=employee_results)
 
 
 def vehicle_reason(
-    db: Session, vehicle: Vehicle, start: datetime, end: datetime
+    db: Session,
+    vehicle: Vehicle,
+    start: datetime,
+    end: datetime,
+    *,
+    exclude_booking_id: UUID | None = None,
 ) -> AvailabilityReason | None:
     if not vehicle.is_active:
         return AvailabilityReason.INACTIVE
 
     buffer = buffer_delta()
-    booking_conflict = db.scalar(
-        select(Booking.id)
-        .where(
-            Booking.vehicle_id == vehicle.id,
-            Booking.status.notin_(INACTIVE_BOOKING_STATUSES),
-            Booking.start_datetime < end + buffer,
-            Booking.end_datetime > start - buffer,
-        )
-        .limit(1)
+    conflict_query = select(Booking.id).where(
+        Booking.vehicle_id == vehicle.id,
+        Booking.status.notin_(INACTIVE_BOOKING_STATUSES),
+        Booking.start_datetime < end + buffer,
+        Booking.end_datetime > start - buffer,
     )
+    if exclude_booking_id is not None:
+        conflict_query = conflict_query.where(Booking.id != exclude_booking_id)
+    booking_conflict = db.scalar(conflict_query.limit(1))
     if booking_conflict is not None:
         return AvailabilityReason.BOOKING_CONFLICT
 
@@ -156,13 +169,18 @@ def vehicle_reason(
 
 
 def employee_reason(
-    db: Session, employee: Employee, start: datetime, end: datetime
+    db: Session,
+    employee: Employee,
+    start: datetime,
+    end: datetime,
+    *,
+    exclude_booking_id: UUID | None = None,
 ) -> AvailabilityReason | None:
     if not employee.is_active:
         return AvailabilityReason.INACTIVE
 
     buffer = buffer_delta()
-    assignment_conflict = db.scalar(
+    conflict_query = (
         select(BookingEmployee.id)
         .join(Booking, Booking.id == BookingEmployee.booking_id)
         .where(
@@ -172,8 +190,10 @@ def employee_reason(
             BookingEmployee.start_datetime < end + buffer,
             BookingEmployee.end_datetime > start - buffer,
         )
-        .limit(1)
     )
+    if exclude_booking_id is not None:
+        conflict_query = conflict_query.where(BookingEmployee.booking_id != exclude_booking_id)
+    assignment_conflict = db.scalar(conflict_query.limit(1))
     if assignment_conflict is not None:
         return AvailabilityReason.BOOKING_CONFLICT
 
@@ -192,13 +212,17 @@ def employee_reason(
 
 
 def _check_vehicle(
-    db: Session, start: datetime, end: datetime, vehicle_id: UUID
+    db: Session,
+    start: datetime,
+    end: datetime,
+    vehicle_id: UUID,
+    exclude_booking_id: UUID | None = None,
 ) -> ResourceAvailabilityRead:
     vehicle = db.get(Vehicle, vehicle_id)
     if vehicle is None:
         raise NotFoundError("Vehicle not found")
 
-    reason = vehicle_reason(db, vehicle, start, end)
+    reason = vehicle_reason(db, vehicle, start, end, exclude_booking_id=exclude_booking_id)
     return ResourceAvailabilityRead(
         id=vehicle.id,
         available=reason is None,
@@ -207,7 +231,11 @@ def _check_vehicle(
 
 
 def _check_employees(
-    db: Session, start: datetime, end: datetime, employee_ids: list[UUID]
+    db: Session,
+    start: datetime,
+    end: datetime,
+    employee_ids: list[UUID],
+    exclude_booking_id: UUID | None = None,
 ) -> list[ResourceAvailabilityRead]:
     if not employee_ids:
         return []
@@ -220,7 +248,7 @@ def _check_employees(
     results: list[ResourceAvailabilityRead] = []
     for employee_id in employee_ids:
         employee = by_id[employee_id]
-        reason = employee_reason(db, employee, start, end)
+        reason = employee_reason(db, employee, start, end, exclude_booking_id=exclude_booking_id)
         results.append(
             ResourceAvailabilityRead(
                 id=employee.id,

@@ -1,6 +1,7 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, Header, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -36,3 +37,24 @@ def get_current_provider(user: User = Depends(get_current_user)) -> User:
     if user.role != UserRole.PROVIDER:
         raise ForbiddenError("Provider access required")
     return user
+
+
+def get_optional_provider(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """Return the Provider for a valid bearer token, or None when none was sent."""
+    if credentials is None:
+        return None
+    user = get_current_user(credentials, db)
+    if user.role != UserRole.PROVIDER:
+        raise ForbiddenError("Provider access required")
+    return user
+
+
+def get_booking_token(
+    x_booking_token: Annotated[str | None, Header(alias="X-Booking-Token")] = None,
+    token: Annotated[str | None, Query()] = None,
+) -> str | None:
+    """Read the guest access token from a header or from a shareable link."""
+    return x_booking_token or token

@@ -17,7 +17,9 @@ class HandoverRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     booking_id: Mapped[UUID] = mapped_column(
         ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False, unique=True
     )
-    access_code_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # The code must be recoverable by authorized users, so it is encrypted
+    # with AES-256-GCM instead of being hashed.
+    access_code_encrypted: Mapped[str | None] = mapped_column(String(255), nullable=True)
     pickup_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
     return_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
     code_generated_at: Mapped[datetime | None] = mapped_column(

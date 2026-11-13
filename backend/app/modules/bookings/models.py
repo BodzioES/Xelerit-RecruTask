@@ -130,7 +130,9 @@ class Booking(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="booking", cascade="all, delete-orphan", uselist=False
     )
     events: Mapped[list[BookingEvent]] = relationship(
-        back_populates="booking", cascade="all, delete-orphan"
+        back_populates="booking",
+        cascade="all, delete-orphan",
+        order_by="BookingEvent.created_at",
     )
 
     def __repr__(self) -> str:
