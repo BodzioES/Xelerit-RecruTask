@@ -18,14 +18,15 @@ end-to-end booking process — not a feature-rich commercial system.
 | 5 | Pricing engine | Done |
 | 6 | Locations, map integration, service-area validation | Done |
 | 7 | Bookings, guest access, statuses, handover | Done |
-| 8–10 | Frontend: landing page, booking wizard, confirmation | Planned |
+| 8–10 | Frontend: landing page, booking wizard, confirmation | Done |
 | 11 | Provider panel | Planned |
 | 12 | Tests, documentation, demo assets | Planned |
 
 ## Stack
 
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy 2.0, Pydantic, Alembic, PostgreSQL 17
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router,
+  React Hook Form, Zod, Leaflet
 - **Maps:** Leaflet, React Leaflet, OpenStreetMap, Geoapify (geocoding and routing)
 - **Infrastructure:** Docker, Docker Compose, nginx
 
@@ -119,7 +120,13 @@ committed; `.env.example` only contains a placeholder.
 ## Testing
 
 ```bash
+# Backend: lint, format check and the test suite
+docker compose run --rm backend ruff check .
+docker compose run --rm backend ruff format --check .
 docker compose run --rm backend pytest
+
+# Frontend: TypeScript check and the production build
+docker compose build frontend
 ```
 
 ## API documentation
@@ -312,6 +319,11 @@ price inside the transaction and assigns resources before returning:
 | Van + Driver | `loading` + `unloading` | Available vehicle + one driver |
 | Full Moving | `loading` + `unloading` | Available vehicle + one driver + `helpers` movers |
 
+Van + Driver and Full Moving accept an optional `items` list (`item_name`, `quantity`,
+`description`). `moving_details` (property type, floor, elevator, carry-in/out, boxes) is
+required for Full Moving and rejected for the other services. Item lists never change the
+price in the MVP.
+
 The response contains the complete booking and an `access_token`. The token is shown **once**;
 only its SHA-256 hash is stored. Send it as the `X-Booking-Token` header or as `?token=` in a
 shareable link to `GET /bookings/{id}` or to cancel the booking. Missing or invalid tokens never
@@ -348,6 +360,33 @@ Codes are never hashed because the Provider has to read them. They are encrypted
 AES-256-GCM using `HANDOVER_ENCRYPTION_KEY` and stored with a format version, nonce and
 ciphertext (`v1:<base64>`). They are never logged or returned to unauthorized users. There is no
 vehicle-arrival or automatic-return confirmation endpoint.
+
+## Frontend
+
+The SPA is served by nginx with an `/index.html` fallback, so deep links can be opened directly.
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Landing page: short explanation, the three services and the service-area note |
+| `/book/{self-drive,van-driver,full-moving}` | Step-by-step booking wizard |
+| `/booking/{id}?token=…` | Booking confirmation, status timeline, cancellation and handover |
+
+The wizard keeps its own draft state and renders only the current step: service → date and
+locations → vehicle → job details → helpers (Full Moving only) → quote → customer details →
+summary. Switching the service keeps the entered locations and contact data and clears only the
+vehicle choice. Validation errors and API failures leave every entered value in place, so a
+failed request never forces the customer to start over.
+
+The quote shown in the wizard comes from `POST /pricing/quote`; the frontend displays the
+server's breakdown and never calculates a final price. Availability is requested per time
+window, and the create request is authoritative: the server recalculates the price and assigns
+resources again.
+
+The confirmation page doubles as the status page. The access token travels in the link, and the
+page also keeps it in `sessionStorage` so a reload of the same tab keeps working. The page shows
+the status badge, the recorded status timeline and, for Self Drive, the lockbox code once the
+Provider has prepared it. A guest can cancel a booking while it is `pending`, `confirmed` or
+`ready_for_pickup`.
 
 ## Known MVP limitations
 
