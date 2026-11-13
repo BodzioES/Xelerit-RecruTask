@@ -118,13 +118,15 @@ class BookingCreate(BaseModel):
                 raise ValueError("vehicle_id is required for self_drive")
             if self.helpers:
                 raise ValueError("helpers are only available for full_moving")
-            if self.items or self.moving_details is not None:
-                raise ValueError("items and moving_details are only available for full_moving")
+            if self.items:
+                raise ValueError("items are not available for self_drive")
+            if self.moving_details is not None:
+                raise ValueError("moving_details are only available for full_moving")
         elif self.service_type == ServiceType.VAN_DRIVER:
             if self.helpers:
                 raise ValueError("helpers are only available for full_moving")
-            if self.items or self.moving_details is not None:
-                raise ValueError("items and moving_details are only available for full_moving")
+            if self.moving_details is not None:
+                raise ValueError("moving_details are only available for full_moving")
         elif self.moving_details is None:
             raise ValueError("moving_details are required for full_moving")
 

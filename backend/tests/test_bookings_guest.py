@@ -197,3 +197,42 @@ def test_booking_requires_a_future_start(
 
     response = client.post("/api/v1/bookings", json=payload)
     assert response.status_code == 422, response.text
+
+
+def test_van_driver_booking_accepts_items(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    created_resources: dict[str, list[UUID]],
+) -> None:
+    vehicle = create_vehicle_via_api(client, auth_headers, created_resources)
+    create_employee_via_api(client, auth_headers, created_resources, role="driver")
+    body = create_booking_via_api(
+        client,
+        created_resources,
+        build_booking_payload(
+            ServiceType.VAN_DRIVER,
+            vehicle_id=vehicle["id"],
+            items=[{"item_name": "Sofa", "quantity": 2, "description": "Two-seater"}],
+        ),
+    )
+
+    assert [item["item_name"] for item in body["items"]] == ["Sofa"]
+    assert body["items"][0]["quantity"] == 2
+    assert body["moving_details"] is None
+
+
+def test_self_drive_booking_rejects_items(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    created_resources: dict[str, list[UUID]],
+) -> None:
+    vehicle = create_vehicle_via_api(client, auth_headers, created_resources)
+    payload = build_booking_payload(
+        ServiceType.SELF_DRIVE,
+        vehicle_id=vehicle["id"],
+        items=[{"item_name": "Sofa", "quantity": 1}],
+    )
+
+    response = client.post("/api/v1/bookings", json=payload)
+    assert response.status_code == 422, response.text
+    assert "items" in response.text
