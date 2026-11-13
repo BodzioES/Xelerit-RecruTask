@@ -90,9 +90,11 @@ export default function StepSummary({
                 : `${draft.helpers} ${draft.helpers === 1 ? "helper" : "helpers"}`}
             </SummaryRow>
           ) : null}
-          <SummaryRow label="Additional service">
-            {draft.additionalService ? "Yes" : "No"}
-          </SummaryRow>
+          {!selfDrive ? (
+            <SummaryRow label="Additional service">
+              {draft.additionalService ? "Yes" : "No"}
+            </SummaryRow>
+          ) : null}
           <SummaryRow label="Contact">
             {draft.customer.firstName} {draft.customer.lastName}
             <br />
