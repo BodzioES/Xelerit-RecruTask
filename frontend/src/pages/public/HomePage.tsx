@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-14 pt-16 sm:px-6 sm:pt-20">
       <p className="text-sm font-medium uppercase tracking-[0.18em] text-brand-600">
-        Trójmiasto + 30 km
+        Tri-City + 30 km
       </p>
       <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
         Van rental and moving services, without the paperwork.

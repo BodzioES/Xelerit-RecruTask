@@ -46,7 +46,7 @@ function BookingWizard({ service }: { service: ServiceMeta }) {
   const [draft, setDraft] = useState<BookingDraft>(() =>
     createInitialDraft(service.serviceType),
   );
-  const [stepIndex, setStepIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(1);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const steps = wizardSteps(draft.serviceType);

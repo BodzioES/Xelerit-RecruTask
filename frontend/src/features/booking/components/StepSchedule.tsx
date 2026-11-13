@@ -132,7 +132,7 @@ export default function StepSchedule({ draft, onChange, onNext, onBack }: Wizard
         </div>
 
         <p className="mt-4 text-xs text-ink-500">
-          We serve Trójmiasto and up to 30 km around it. All times are in your local timezone.
+          We serve the Tri-City area and up to 30 km around it. All times are in your local timezone.
         </p>
       </Panel>
 

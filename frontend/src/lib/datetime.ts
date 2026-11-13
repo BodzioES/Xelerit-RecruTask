@@ -16,9 +16,11 @@ export function combineLocal(date: string, time: string): Date {
   return new Date(`${date}T${time.length === 5 ? time : `${time}:00`}`);
 }
 
-/** Convert a local date/time pair into an ISO-8601 UTC timestamp. */
+/** Convert a local date/time pair into an ISO-8601 UTC timestamp safely. */
 export function toIsoFromLocal(date: string, time: string): string {
-  return combineLocal(date, time).toISOString();
+  const value = combineLocal(date, time);
+  if (Number.isNaN(value.getTime())) return "";
+  return value.toISOString();
 }
 
 export function addHours(date: string, time: string, hours: number): { date: string; time: string } {

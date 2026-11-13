@@ -12,7 +12,7 @@ function locationError(location: DraftLocation, label: string): string | undefin
     return `Choose the ${label} point from the address list or on the map.`;
   }
   if (location.inServiceArea === false) {
-    return `The ${label} location is outside our service area (Trójmiasto + 30 km).`;
+    return `The ${label} location is outside our service area (Tri-City area + 30 km).`;
   }
   if (location.inServiceArea === null) {
     return `We could not verify the ${label} location. Pick the point on the map again.`;

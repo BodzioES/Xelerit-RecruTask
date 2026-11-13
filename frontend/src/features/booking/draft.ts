@@ -75,7 +75,8 @@ export function draftEndIso(draft: BookingDraft): string | null {
   const start = combineLocal(draft.startDate, draft.startTime);
   if (Number.isNaN(start.getTime())) return null;
   const end = addHours(draft.startDate, draft.startTime, draft.durationHours);
-  return toIsoFromLocal(end.date, end.time);
+  const endIso = toIsoFromLocal(end.date, end.time);
+  return endIso || null;
 }
 
 export function draftOrigin(draft: BookingDraft): CoordinatePoint | null {
