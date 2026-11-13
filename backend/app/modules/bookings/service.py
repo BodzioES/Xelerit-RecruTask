@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select, text
+from sqlalchemy import Select, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import UnaryExpression
@@ -20,6 +20,7 @@ from app.modules.bookings import assignment, status
 from app.modules.bookings.access import create_guest_token
 from app.modules.bookings.models import (
     Booking,
+    BookingEmployee,
     BookingEvent,
     BookingItem,
     BookingLocation,
@@ -141,6 +142,7 @@ def list_bookings(
     *,
     booking_status: BookingStatus | None,
     service_type: ServiceType | None,
+    employee_id: UUID | None,
     limit: int,
     offset: int,
 ) -> list[Booking]:
@@ -149,10 +151,19 @@ def list_bookings(
         statement = statement.where(Booking.status == booking_status)
     if service_type is not None:
         statement = statement.where(Booking.service_type == service_type)
+    if employee_id is not None:
+        statement = statement.where(Booking.id.in_(_assigned_booking_ids(employee_id)))
     statement = (
         statement.order_by(Booking.created_at.desc(), Booking.id).offset(offset).limit(limit)
     )
     return list(db.scalars(statement))
+
+
+def _assigned_booking_ids(employee_id: UUID) -> Select[tuple[UUID]]:
+    return select(BookingEmployee.booking_id).where(
+        BookingEmployee.employee_id == employee_id,
+        BookingEmployee.is_released.is_(False),
+    )
 
 
 def dashboard(db: Session) -> DashboardRead:

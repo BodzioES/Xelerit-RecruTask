@@ -32,6 +32,7 @@ def read_dashboard(db: Session = Depends(get_db)) -> DashboardRead:
 def list_bookings(
     booking_status: BookingStatus | None = Query(default=None, alias="status"),
     service_type: ServiceType | None = Query(default=None),
+    employee_id: UUID | None = Query(default=None),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -40,6 +41,7 @@ def list_bookings(
         db,
         booking_status=booking_status,
         service_type=service_type,
+        employee_id=employee_id,
         limit=limit,
         offset=offset,
     )

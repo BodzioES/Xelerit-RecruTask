@@ -209,3 +209,41 @@ def test_provider_dashboard_and_bookings_list(
 
     assert client.get("/api/v1/provider/dashboard").status_code == 401
     assert client.get("/api/v1/provider/bookings").status_code == 401
+
+
+def test_provider_can_filter_bookings_by_assigned_employee(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    created_resources: dict[str, list[UUID]],
+) -> None:
+    vehicle = create_vehicle_via_api(client, auth_headers, created_resources)
+    driver = create_employee_via_api(client, auth_headers, created_resources, role="driver")
+    body = create_booking_via_api(
+        client,
+        created_resources,
+        build_booking_payload(ServiceType.VAN_DRIVER, vehicle_id=vehicle["id"], hours=4),
+    )
+
+    response = client.post(
+        f"/api/v1/provider/bookings/{body['id']}/assign-resources",
+        json={"employee_ids": [driver["id"]]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+
+    assigned = client.get(
+        "/api/v1/provider/bookings",
+        params={"employee_id": driver["id"], "limit": 100},
+        headers=auth_headers,
+    )
+    assert assigned.status_code == 200, assigned.text
+    assert any(item["id"] == body["id"] for item in assigned.json())
+
+    other = create_employee_via_api(client, auth_headers, created_resources, role="mover")
+    unassigned = client.get(
+        "/api/v1/provider/bookings",
+        params={"employee_id": other["id"], "limit": 100},
+        headers=auth_headers,
+    )
+    assert unassigned.status_code == 200, unassigned.text
+    assert all(item["id"] != body["id"] for item in unassigned.json())
