@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "moveit-backend"
 version = "0.1.0"
-description = "MoveIt API — van rental, transport and moving services MVP"
+description = "JanuszTrans API — van rental, transport and moving services MVP"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115,<1.0",

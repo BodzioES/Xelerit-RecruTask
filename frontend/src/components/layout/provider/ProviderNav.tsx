@@ -29,11 +29,8 @@ export default function ProviderNav({ profile }: Props) {
   return (
     <aside className="border-b border-slate-200 bg-white lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:border-r lg:border-b-0">
       <div className="flex h-16 items-center gap-2 px-4 sm:px-6 lg:px-5">
-        <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-          M
-        </span>
         <div>
-          <p className="text-sm font-semibold text-ink-900">MoveIt</p>
+          <p className="text-sm font-semibold text-ink-900">JanuszTrans</p>
           <p className="text-xs text-ink-500">Provider panel</p>
         </div>
       </div>

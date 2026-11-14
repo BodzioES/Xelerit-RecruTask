@@ -6,7 +6,7 @@ import type { BookingActor, BookingEvent } from "@/types/api";
 type Audience = "customer" | "provider";
 
 const ACTOR_LABELS: Record<Audience, Record<BookingActor, string>> = {
-  customer: { customer: "You", provider: "MoveIt", system: "System" },
+  customer: { customer: "You", provider: "JanuszTrans", system: "System" },
   provider: { customer: "Customer", provider: "You", system: "System" },
 };
 

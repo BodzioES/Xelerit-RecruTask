@@ -1,4 +1,4 @@
-"""Idempotent demo seed for the MoveIt MVP."""
+"""Idempotent demo seed for the JanuszTrans MVP."""
 
 import logging
 from datetime import UTC, datetime, timedelta
@@ -56,8 +56,8 @@ def _seed_provider(db: Session) -> User:
         return provider
 
     provider = User(
-        first_name="MoveIt",
-        last_name="Provider",
+        first_name="Janusz",
+        last_name="Trans",
         email=settings.provider_email.lower(),
         password_hash=hash_password(settings.provider_password),
         role=UserRole.PROVIDER,

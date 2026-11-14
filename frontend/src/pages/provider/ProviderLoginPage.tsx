@@ -19,11 +19,8 @@ export default function ProviderLoginPage() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-              M
-            </span>
-            <span className="text-lg font-semibold tracking-tight text-ink-900">MoveIt</span>
+          <Link to="/">
+            <span className="text-lg font-semibold tracking-tight text-ink-900">JanuszTrans</span>
           </Link>
           <span className="text-sm font-medium text-ink-500">Provider panel</span>
         </div>

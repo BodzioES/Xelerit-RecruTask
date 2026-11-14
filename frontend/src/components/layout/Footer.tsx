@@ -19,11 +19,11 @@ export default function Footer() {
     <footer id="contact" className="border-t border-slate-200 bg-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-ink-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
-          <p className="font-medium text-ink-900">MoveIt</p>
+          <p className="font-medium text-ink-900">JanuszTrans</p>
           <p className="mt-1">Gdańsk · Gdynia · Sopot and up to 30 km around</p>
           <p className="mt-1">
-            <a className="transition hover:text-ink-900" href="mailto:hello@moveit.pl">
-              hello@moveit.pl
+            <a className="transition hover:text-ink-900" href="mailto:hello@janusztrans.pl">
+              hello@janusztrans.pl
             </a>
             {" · "}
             <a className="transition hover:text-ink-900" href="tel:+48580000000">

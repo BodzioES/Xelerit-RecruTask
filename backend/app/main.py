@@ -14,7 +14,7 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description=(
-        "MoveIt MVP — a single-company platform for van rental (Self Drive), "
+        "JanuszTrans MVP — a single-company platform for van rental (Self Drive), "
         "transport with a driver (Van + Driver) and full moving services."
     ),
     docs_url="/docs",

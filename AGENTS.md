@@ -1,4 +1,4 @@
-# Agent Guide — MoveIt
+# Agent Guide — JanuszTrans
 
 This file is the entry point for any AI agent (or human) contributing to this repository.
 Read it before touching code, then read the guide for the area you are working in.
@@ -11,7 +11,7 @@ Read it before touching code, then read the guide for the area you are working i
 
 ## 1. Project context
 
-MoveIt is a full-stack MVP for a single-company van rental, transport-with-driver and
+JanuszTrans is a full-stack MVP for a single-company van rental, transport-with-driver and
 full-moving business in Trójmiasto (Poland). The functional source of truth is the local
 `tresc-projektu.md` (not tracked in Git). If a request contradicts it, ask before coding.
 

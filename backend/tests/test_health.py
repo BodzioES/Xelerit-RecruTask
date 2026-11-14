@@ -14,4 +14,4 @@ def test_health_endpoint() -> None:
 def test_openapi_schema_is_available() -> None:
     response = client.get("/openapi.json")
     assert response.status_code == 200
-    assert response.json()["info"]["title"] == "MoveIt API"
+    assert response.json()["info"]["title"] == "JanuszTrans API"

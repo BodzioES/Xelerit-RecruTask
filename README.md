@@ -1,6 +1,6 @@
-# MoveIt
+# JanuszTrans
 
-MoveIt is a single-company web platform for van rental, transport with a driver and full
+JanuszTrans is a single-company web platform for van rental, transport with a driver and full
 moving services in Trójmiasto (Gdańsk, Gdynia, Sopot) and up to ~30 km around it.
 
 The project is an MVP built as a full-stack recruitment task. The priority is a correct,
