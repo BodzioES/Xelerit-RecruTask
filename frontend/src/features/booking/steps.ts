@@ -3,7 +3,6 @@ import type { ServiceType } from "@/types/api";
 import type { BookingDraft } from "./types";
 
 export type WizardStepId =
-  | "service"
   | "schedule"
   | "vehicle"
   | "details"
@@ -26,11 +25,14 @@ export type WizardStepProps = {
 
 export function wizardSteps(serviceType: ServiceType): WizardStep[] {
   const steps: WizardStep[] = [
-    { id: "service", label: "Service" },
     { id: "schedule", label: "Date & locations" },
     { id: "vehicle", label: "Vehicle" },
-    { id: "details", label: "Job details" },
   ];
+
+  // Self drive needs no job details: there is nothing to load, carry or move.
+  if (serviceType !== "self_drive") {
+    steps.push({ id: "details", label: "Job details" });
+  }
 
   if (serviceType === "full_moving") {
     steps.push({ id: "helpers", label: "Helpers" });

@@ -23,6 +23,18 @@ class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("hourly_price >= 0", name="ck_vehicles_hourly_price_non_negative"),
         CheckConstraint("daily_price >= 0", name="ck_vehicles_daily_price_non_negative"),
         CheckConstraint("year BETWEEN 1990 AND 2100", name="ck_vehicles_year_range"),
+        CheckConstraint(
+            "cargo_length_cm IS NULL OR cargo_length_cm > 0",
+            name="ck_vehicles_cargo_length_positive",
+        ),
+        CheckConstraint(
+            "cargo_width_cm IS NULL OR cargo_width_cm > 0",
+            name="ck_vehicles_cargo_width_positive",
+        ),
+        CheckConstraint(
+            "cargo_height_cm IS NULL OR cargo_height_cm > 0",
+            name="ck_vehicles_cargo_height_positive",
+        ),
     )
 
     brand: Mapped[str] = mapped_column(String(80), nullable=False)
@@ -30,6 +42,10 @@ class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     year: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     category: Mapped[str] = mapped_column(String(50), nullable=False)
     cargo_volume: Mapped[Decimal] = mapped_column(Numeric(6, 2), nullable=False)
+    # Interior dimensions in centimetres; optional because a provider may not know them.
+    cargo_length_cm: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    cargo_width_cm: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    cargo_height_cm: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
     payload: Mapped[int] = mapped_column(Integer, nullable=False)
     seats: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)

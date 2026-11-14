@@ -46,11 +46,11 @@ export default function MapPicker({ latitude, longitude, onPick }: Props) {
   const center: [number, number] = hasPoint ? [latitude, longitude] : SERVICE_AREA_CENTER;
 
   return (
-    <div className="h-64 overflow-hidden rounded-xl border border-slate-200">
+    <div className="h-80 overflow-hidden rounded-xl border border-slate-200">
       <MapContainer
         center={center}
         zoom={12}
-        scrollWheelZoom={false}
+        scrollWheelZoom
         className="h-full w-full"
         aria-label="Map for choosing a location"
       >

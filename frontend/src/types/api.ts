@@ -54,6 +54,9 @@ export type AvailableVehicle = {
   year: number;
   category: string;
   cargo_volume: DecimalString;
+  cargo_length_cm: number | null;
+  cargo_width_cm: number | null;
+  cargo_height_cm: number | null;
   payload: number;
   seats: number;
   description: string | null;
@@ -218,6 +221,9 @@ export type ProviderVehicle = {
   year: number;
   category: string;
   cargo_volume: DecimalString;
+  cargo_length_cm: number | null;
+  cargo_width_cm: number | null;
+  cargo_height_cm: number | null;
   payload: number;
   seats: number;
   description: string | null;

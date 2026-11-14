@@ -4,13 +4,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import Button from "@/components/ui/Button";
 import Notice from "@/components/ui/Notice";
+import ServiceIcon from "@/components/ui/ServiceIcon";
 import StepCustomer from "@/features/booking/components/StepCustomer";
 import StepDetails from "@/features/booking/components/StepDetails";
 import StepHelpers from "@/features/booking/components/StepHelpers";
 import StepIndicator from "@/features/booking/components/StepIndicator";
 import StepQuote from "@/features/booking/components/StepQuote";
 import StepSchedule from "@/features/booking/components/StepSchedule";
-import StepService from "@/features/booking/components/StepService";
 import StepSummary from "@/features/booking/components/StepSummary";
 import StepVehicle from "@/features/booking/components/StepVehicle";
 import { createBooking, rememberBookingToken } from "@/features/booking/api";
@@ -46,7 +46,7 @@ function BookingWizard({ service }: { service: ServiceMeta }) {
   const [draft, setDraft] = useState<BookingDraft>(() =>
     createInitialDraft(service.serviceType),
   );
-  const [stepIndex, setStepIndex] = useState(1);
+  const [stepIndex, setStepIndex] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const steps = wizardSteps(draft.serviceType);
@@ -125,8 +125,6 @@ function BookingWizard({ service }: { service: ServiceMeta }) {
     const stepProps = { draft, onChange: updateDraft, onNext: goNext, onBack: goBack };
 
     switch (currentStep.id) {
-      case "service":
-        return <StepService {...stepProps} />;
       case "schedule":
         return <StepSchedule {...stepProps} />;
       case "vehicle":
@@ -156,8 +154,20 @@ function BookingWizard({ service }: { service: ServiceMeta }) {
       <h1 className="text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
         Book your {service.name.toLowerCase()}
       </h1>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-700">{service.summary}</p>
-      <p className="mt-2 max-w-2xl text-sm text-ink-500">
+
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex items-start gap-3">
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+            <ServiceIcon name={service.slug} className="size-6" />
+          </span>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-ink-900">{service.summary}</p>
+            <p className="text-sm leading-relaxed text-ink-500">{service.pricing}</p>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-3 max-w-2xl text-sm text-ink-500">
         No account needed. The booking is created as <strong>Pending review</strong> and the
         Provider confirms it before the service starts.
       </p>

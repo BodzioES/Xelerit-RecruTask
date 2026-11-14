@@ -7,6 +7,9 @@ export type VehicleInput = {
   year: number;
   category: string;
   cargo_volume: string;
+  cargo_length_cm: number | null;
+  cargo_width_cm: number | null;
+  cargo_height_cm: number | null;
   payload: number;
   seats: number;
   description: string | null;

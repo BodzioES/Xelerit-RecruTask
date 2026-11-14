@@ -49,12 +49,26 @@ const decimalField = (min: number, { above }: { above: boolean }) =>
       : `Enter a number greater than or equal to ${min}.`,
   );
 
+/** Optional whole number: an empty string clears the value. */
+const optionalIntegerField = (minimum: number, maximum: number) =>
+  z.string().trim().refine(
+    (value) => {
+      if (value === "") return true;
+      const number = asNumber(value);
+      return number !== null && Number.isInteger(number) && number >= minimum && number <= maximum;
+    },
+    `Enter a whole number of at least ${minimum} and at most ${maximum}, or leave it empty.`,
+  );
+
 const vehicleSchema = z.object({
   brand: z.string().trim().min(1, "Enter the brand.").max(80, "Use at most 80 characters."),
   model: z.string().trim().min(1, "Enter the model.").max(80, "Use at most 80 characters."),
   year: integerField(1990, 2100),
   category: z.string().trim().min(1, "Enter a category.").max(50, "Use at most 50 characters."),
   cargo_volume: decimalField(0, { above: true }),
+  cargo_length_cm: optionalIntegerField(1, 2000),
+  cargo_width_cm: optionalIntegerField(1, 2000),
+  cargo_height_cm: optionalIntegerField(1, 2000),
   payload: integerField(1),
   seats: integerField(1),
   description: z.string().max(2000, "Use at most 2000 characters."),
@@ -80,6 +94,9 @@ function initialValues(vehicle: ProviderVehicle | null): VehicleValues {
       year: "2020",
       category: "Van",
       cargo_volume: "10",
+      cargo_length_cm: "",
+      cargo_width_cm: "",
+      cargo_height_cm: "",
       payload: "1000",
       seats: "3",
       description: "",
@@ -95,6 +112,9 @@ function initialValues(vehicle: ProviderVehicle | null): VehicleValues {
     year: String(vehicle.year),
     category: vehicle.category,
     cargo_volume: vehicle.cargo_volume,
+    cargo_length_cm: vehicle.cargo_length_cm === null ? "" : String(vehicle.cargo_length_cm),
+    cargo_width_cm: vehicle.cargo_width_cm === null ? "" : String(vehicle.cargo_width_cm),
+    cargo_height_cm: vehicle.cargo_height_cm === null ? "" : String(vehicle.cargo_height_cm),
     payload: String(vehicle.payload),
     seats: String(vehicle.seats),
     description: vehicle.description ?? "",
@@ -116,6 +136,9 @@ function toInput(values: VehicleValues): VehicleInput {
     year: Number(values.year),
     category: values.category.trim(),
     cargo_volume: String(round2(Number(values.cargo_volume))),
+    cargo_length_cm: asNumber(values.cargo_length_cm),
+    cargo_width_cm: asNumber(values.cargo_width_cm),
+    cargo_height_cm: asNumber(values.cargo_height_cm),
     payload: Number(values.payload),
     seats: Number(values.seats),
     description: values.description.trim() || null,
@@ -219,6 +242,27 @@ export default function VehicleForm({ vehicle, onSaved, onCancel }: Props) {
             required
             error={errors.cargo_volume?.message}
             {...register("cargo_volume")}
+          />
+          <TextInput
+            label="Cargo length (cm)"
+            inputMode="numeric"
+            hint="Interior length. Leave empty if unknown."
+            error={errors.cargo_length_cm?.message}
+            {...register("cargo_length_cm")}
+          />
+          <TextInput
+            label="Cargo width (cm)"
+            inputMode="numeric"
+            hint="Interior width. Leave empty if unknown."
+            error={errors.cargo_width_cm?.message}
+            {...register("cargo_width_cm")}
+          />
+          <TextInput
+            label="Cargo height (cm)"
+            inputMode="numeric"
+            hint="Interior height. Leave empty if unknown."
+            error={errors.cargo_height_cm?.message}
+            {...register("cargo_height_cm")}
           />
           <TextInput
             label="Payload (kg)"

@@ -69,6 +69,13 @@ export default function VehicleCard({ vehicle, selected, onSelect }: Props) {
           </div>
         </dl>
 
+        {vehicle.cargo_length_cm && vehicle.cargo_width_cm && vehicle.cargo_height_cm ? (
+          <p className="text-xs text-ink-500">
+            Cargo area {vehicle.cargo_length_cm} × {vehicle.cargo_width_cm} ×{" "}
+            {vehicle.cargo_height_cm} cm (L × W × H)
+          </p>
+        ) : null}
+
         <p className="mt-auto text-sm text-ink-700">
           {formatMoney(vehicle.hourly_price)}/h
           <span aria-hidden="true" className="text-slate-300">

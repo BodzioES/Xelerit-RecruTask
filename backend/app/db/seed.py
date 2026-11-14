@@ -117,8 +117,24 @@ def _seed_pricing_rules(db: Session) -> None:
     db.flush()
 
 
+VEHICLE_DIMENSIONS: dict[tuple[str, str], tuple[int, int, int]] = {
+    # (brand, model) -> (length, width, height) of the cargo area in centimetres.
+    ("Renault", "Master"): (373, 177, 188),
+    ("Fiat", "Ducato"): (312, 187, 193),
+    ("Ford", "Transit"): (349, 178, 203),
+    ("Iveco", "Daily"): (414, 174, 190),
+}
+
+
 def _seed_vehicles(db: Session) -> None:
     if db.scalar(select(func.count(Vehicle.id))) > 0:
+        # Backfill dimensions for databases seeded before they existed.
+        for vehicle in db.scalars(select(Vehicle)).all():
+            dimensions = VEHICLE_DIMENSIONS.get((vehicle.brand, vehicle.model))
+            if dimensions is None or vehicle.cargo_length_cm is not None:
+                continue
+            vehicle.cargo_length_cm, vehicle.cargo_width_cm, vehicle.cargo_height_cm = dimensions
+        db.commit()
         return
 
     db.add_all(
@@ -129,6 +145,9 @@ def _seed_vehicles(db: Session) -> None:
                 year=2023,
                 category="L3H2",
                 cargo_volume=Decimal("13.00"),
+                cargo_length_cm=373,
+                cargo_width_cm=177,
+                cargo_height_cm=188,
                 payload=1400,
                 seats=3,
                 description="Long wheelbase panel van with a high roof and a rear step.",
@@ -142,6 +161,9 @@ def _seed_vehicles(db: Session) -> None:
                 year=2022,
                 category="L2H2",
                 cargo_volume=Decimal("11.50"),
+                cargo_length_cm=312,
+                cargo_width_cm=187,
+                cargo_height_cm=193,
                 payload=1250,
                 seats=3,
                 description="Comfortable mid-size van, easy to drive in the city.",
@@ -155,6 +177,9 @@ def _seed_vehicles(db: Session) -> None:
                 year=2024,
                 category="L3H3",
                 cargo_volume=Decimal("15.00"),
+                cargo_length_cm=349,
+                cargo_width_cm=178,
+                cargo_height_cm=203,
                 payload=1500,
                 seats=3,
                 description="Extra-high roof for tall loads and bulky furniture.",
@@ -168,6 +193,9 @@ def _seed_vehicles(db: Session) -> None:
                 year=2021,
                 category="L4H2",
                 cargo_volume=Decimal("18.00"),
+                cargo_length_cm=414,
+                cargo_width_cm=174,
+                cargo_height_cm=190,
                 payload=1800,
                 seats=3,
                 description="The largest van in the fleet, ideal for full moves.",

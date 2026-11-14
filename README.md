@@ -207,6 +207,9 @@ validated against the `provider` role; guest and customer routes stay public.
   guard, so two concurrent requests can never double-book the same resource.
 - Only active vehicles and employees are returned by the public availability endpoints.
   Capacity filters (`min_cargo_volume`, `min_payload`, `min_seats`) are optional.
+- Vehicles also carry optional interior dimensions (`cargo_length_cm`, `cargo_width_cm`,
+  `cargo_height_cm`). They are shown on the vehicle card and are informative only — they are
+  not used for filtering or pricing.
 
 Example:
 
@@ -292,6 +295,10 @@ Every result also contains `in_service_area` and `distance_from_center_km`. The 
 available standalone through `POST /locations/validate`, which works without a Geoapify key
 and returns the configured `radius_km`. This endpoint is the server-side gate for the booking
 area; the frontend only displays the result.
+
+The booking form keeps the address text and the coordinates in sync: editing the address
+clears the previously picked point, and clicking the map overwrites the address with the
+reverse-geocoded one, so a booking can never mix a typed street with a different map point.
 
 The service area is a circle centred on Sopot pier by default. It is configured with
 `SERVICE_AREA_CENTER_LATITUDE`, `SERVICE_AREA_CENTER_LONGITUDE` and

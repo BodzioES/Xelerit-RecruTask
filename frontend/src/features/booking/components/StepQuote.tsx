@@ -8,6 +8,7 @@ import Notice from "@/components/ui/Notice";
 import Panel from "@/components/ui/Panel";
 import { bookingKeys, fetchQuote } from "@/features/booking/api";
 import { errorMessage } from "@/lib/errors";
+import { serviceByType } from "@/lib/services";
 
 import { draftEndIso, draftStartIso, quoteRequestFromDraft } from "../draft";
 import type { WizardStepProps } from "../steps";
@@ -80,6 +81,10 @@ export default function StepQuote({ draft, onNext, onBack }: WizardStepProps) {
         ) : null}
 
         {quote.isSuccess ? <QuoteBreakdown quote={quote.data} /> : null}
+
+        <p className="mt-4 text-xs leading-relaxed text-ink-500">
+          How this price is built: {serviceByType(draft.serviceType).pricing}
+        </p>
       </Panel>
 
       {showRequestError && !quote.isSuccess ? (

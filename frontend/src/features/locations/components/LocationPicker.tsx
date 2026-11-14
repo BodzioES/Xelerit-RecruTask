@@ -40,7 +40,16 @@ export default function LocationPicker({ label, hint, error, required, value, on
 
   function handleAddressChange(address: string): void {
     setQuery(address);
-    onChange({ ...value, address, placeId: null });
+    // Typing a new address invalidates the previously picked point: the address text
+    // must always describe the point we send to the server.
+    onChange({
+      ...value,
+      address,
+      latitude: null,
+      longitude: null,
+      placeId: null,
+      inServiceArea: null,
+    });
   }
 
   function selectSuggestion(suggestion: LocationSuggestion): void {
@@ -60,21 +69,22 @@ export default function LocationPicker({ label, hint, error, required, value, on
     setLookupNote(null);
     try {
       const area = await validateLocation(latitude, longitude);
+
       let address = value.address.trim();
       let placeId = value.placeId;
-
-      if (!address) {
-        try {
-          const reversed = await reverseLocation(latitude, longitude);
-          address = reversed.address;
-          placeId = reversed.place_id;
+      try {
+        const reversed = await reverseLocation(latitude, longitude);
+        address = reversed.address;
+        placeId = reversed.place_id;
+        setQuery(address);
+      } catch (reverseError) {
+        if (isUnavailable(reverseError) && !address) {
+          // No geocoding configured: keep the point usable by describing it honestly.
+          address = `Point on the map (${latitude.toFixed(5)}, ${longitude.toFixed(5)})`;
           setQuery(address);
-        } catch (reverseError) {
-          if (isUnavailable(reverseError)) {
-            setLookupNote(
-              "Address lookup is not configured here. Type the address above; the map point is saved.",
-            );
-          }
+          setLookupNote(
+            "Address lookup is not configured here. The point is saved with its coordinates — replace the text with a street address if you prefer.",
+          );
         }
       }
 

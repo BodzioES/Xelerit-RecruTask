@@ -13,6 +13,15 @@ import WizardFooter from "./WizardFooter";
 
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+const PHONE_ALLOWED = /^[+\d][\d\s()-]*$/;
+
+/** A phone number counts as valid with 9–15 digits, allowing +48 and separators. */
+function isValidPhone(value: string): boolean {
+  if (!PHONE_ALLOWED.test(value)) return false;
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= 9 && digits.length <= 15;
+}
+
 const customerSchema = z.object({
   firstName: z
     .string()
@@ -33,8 +42,9 @@ const customerSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(5, "Enter a phone number we can reach you on.")
-    .max(40, "Use at most 40 characters."),
+    .min(1, "Enter a phone number we can reach you on.")
+    .max(40, "Use at most 40 characters.")
+    .refine(isValidPhone, "Enter a real phone number, for example +48 501 234 567."),
   notes: z.string().max(2000, "Use at most 2000 characters."),
 });
 
