@@ -26,8 +26,8 @@ export default function Footer() {
               hello@janusztrans.pl
             </a>
             {" · "}
-            <a className="transition hover:text-ink-900" href="tel:+48580000000">
-              +48 58 000 00 00
+            <a className="transition hover:text-ink-900" href="tel:+48123456789">
+              +48 123 456 789
             </a>
           </p>
         </div>
