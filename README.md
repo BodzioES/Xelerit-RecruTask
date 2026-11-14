@@ -109,9 +109,11 @@ docker compose run --rm backend alembic current
 All configuration lives in `.env` (see `.env.example`). Never commit `.env` or API keys.
 The seeded provider account is created from `PROVIDER_EMAIL` / `PROVIDER_PASSWORD`.
 
-Geoapify geocoding requires `GEOAPIFY_API_KEY`. When the key is empty, address search and
-reverse geocoding return `503`, while `/locations/validate` and pricing keep working. Pricing
-distance uses a haversine estimate until the routing provider is wired in.
+Geoapify provides geocoding and driving routes. `GEOAPIFY_API_KEY` is required for address
+search, reverse geocoding and route-distance pricing. When the key is empty, address search and
+reverse geocoding return `503`, `/locations/validate` and pricing keep working, and the billable
+distance falls back to a straight-line haversine estimate. Quotes expose `distance_source` as
+`routing`, `haversine` or `none` so the fallback is visible to the client.
 
 Lockbox codes are encrypted with `HANDOVER_ENCRYPTION_KEY`. Use a long random value and keep
 it stable: changing the key makes previously generated codes unreadable. The value is never
@@ -176,6 +178,8 @@ validated against the `provider` role; guest and customer routes stay public.
 | POST | `/api/v1/provider/employees/{id}/unavailability` | Provider | Block an employee (leave, training) |
 | DELETE | `/api/v1/provider/employees/{id}/unavailability/{blockId}` | Provider | Remove an employee block |
 | POST | `/api/v1/pricing/quote` | — | Server-side price quote with a line-item breakdown |
+| GET | `/api/v1/provider/pricing-rules` | Provider | Read the rates used for every service |
+| PATCH | `/api/v1/provider/pricing-rules/{service_type}` | Provider | Edit the rates for one service |
 | GET | `/api/v1/locations/search?q=` | — | Address suggestions from Geoapify |
 | GET | `/api/v1/locations/reverse?lat=&lng=` | — | Address for a map point |
 | POST | `/api/v1/locations/validate` | — | Check whether a point is inside the service area |
@@ -238,7 +242,8 @@ booking creation recalculates the price from the same rules inside its transacti
 | `floor`, `has_elevator` | Full Moving | Floor surcharge and no-elevator surcharge |
 | `additional_service` | all | Adds the flat additional-service price from the rule |
 
-- The rule for each service type lives in `pricing_rules` and is seeded with demo values.
+- The rule for each service type lives in `pricing_rules` and is seeded with demo values. The
+  Provider can read and edit every rule in the panel (`/provider/pricing`) or through the API.
   `min_duration_hours` is a billing minimum: shorter requests are charged for the minimum.
 - Self Drive uses the selected vehicle's hourly/daily rates when available. Rentals under
   24 hours are billed hourly; longer rentals use full days plus leftover hours, capped so
@@ -247,11 +252,13 @@ booking creation recalculates the price from the same rules inside its transacti
 - Van + Driver bills the base fee, billable hours and route distance.
 - Full Moving bills the same components plus helpers, floor surcharges, the no-elevator
   surcharge and an optional additional service.
-- Distance is calculated by the backend from coordinates. Until the Geoapify routing
-  provider is wired in, the backend uses a straight-line haversine estimate, so the final
-  driving distance may be longer. The client never sends a billable distance.
-- `floor`, `has_elevator` and `helpers` are rejected outside Full Moving. When `floor` is
-  above ground, `has_elevator` is required. `origin` and `destination` must be sent together.
+- Distance is calculated by the backend from coordinates through the Geoapify Routing API. If
+  the key is missing or the provider fails, the backend falls back to a straight-line haversine
+  estimate and reports it in `distance_source`; the final driving distance may be longer. The
+  client never sends a billable distance.
+- `floor`, `has_elevator` and `helpers` are rejected outside Full Moving. For apartments,
+  offices and retail units `floor` is required; for a floor above ground, `has_elevator` is also
+  required. `origin` and `destination` must be sent together.
 - All amounts are in PLN, use `Decimal` arithmetic and are rounded to grosze. The sum of the
   `lines` always equals `total`.
 
@@ -321,8 +328,10 @@ price inside the transaction and assigns resources before returning:
 
 Van + Driver and Full Moving accept an optional `items` list (`item_name`, `quantity`,
 `description`). `moving_details` (property type, floor, elevator, carry-in/out, boxes) is
-required for Full Moving and rejected for the other services. Item lists never change the
-price in the MVP.
+required for Full Moving and rejected for the other services. Apartments, offices and retail
+units must include a floor; houses, warehouses and halls may omit it. The declared helper count
+is stored on the booking (`helpers_requested`) and later reassignments must keep exactly that
+many movers. Item lists never change the price in the MVP.
 
 The response contains the complete booking and an `access_token`. The token is shown **once**;
 only its SHA-256 hash is stored. Send it as the `X-Booking-Token` header or as `?token=` in a
@@ -341,7 +350,9 @@ the previous status, new status, actor and optional note.
 | `completed`, `rejected`, `cancelled` | — (terminal) |
 
 Only Self Drive can use `ready_for_pickup`, and a Self Drive booking must pass through it before
-`in_progress`. Cancelling or rejecting a booking releases its vehicle and employee windows
+`in_progress`. The transition is rejected until the handover record contains a generated lockbox
+code and pickup instructions, so the customer is never told to collect a van without the details
+needed to open it. Cancelling or rejecting a booking releases its vehicle and employee windows
 without deleting the assignment history. The Provider can reassign resources through
 `POST /provider/bookings/{id}/assign-resources`; the same availability checks and database
 exclusion constraints apply.
@@ -354,7 +365,8 @@ sending it again rotates the code. Pickup and return instructions can be updated
 
 The Provider can always read the code and instructions. The guest can read them through
 `GET /bookings/{id}/handover` only when the booking is `ready_for_pickup`, `in_progress` or
-`completed`. Booking details never contain the lockbox code.
+`completed`. A booking can only become `ready_for_pickup` after both the code and the pickup
+instructions exist. Booking details never contain the lockbox code.
 
 Codes are never hashed because the Provider has to read them. They are encrypted with
 AES-256-GCM using `HANDOVER_ENCRYPTION_KEY` and stored with a format version, nonce and
@@ -376,6 +388,7 @@ The SPA is served by nginx with an `/index.html` fallback, so deep links can be 
 | `/provider/bookings/{id}` | Booking detail: timeline, status actions, resource assignment, handover |
 | `/provider/vehicles` | Fleet management (add, edit, deactivate, downtime blocks) |
 | `/provider/employees` | Employee management (add, edit, deactivate, unavailability blocks) |
+| `/provider/pricing` | Pricing-rule editor for all three services |
 
 The wizard keeps its own draft state and renders only the current step: service → date and
 locations → vehicle → job details → helpers (Full Moving only) → quote → customer details →
@@ -413,8 +426,9 @@ handover are rendered from one set of components on both sides.
 - Item lists and descriptions are booking data; the MVP price does not vary by item count
   or item type. The quote covers the service, duration, vehicle, distance, helpers, floors,
   elevator access and the optional additional service.
-- Address search and reverse geocoding need a Geoapify key. Without it, locations can still
-  be validated, and the frontend can fall back to manual coordinates.
+- Address search, reverse geocoding and route-distance pricing need a Geoapify key. Without it,
+  locations can still be validated, and pricing falls back to a straight-line distance that is
+  labelled `haversine` in the quote.
 
 ## AI usage
 
