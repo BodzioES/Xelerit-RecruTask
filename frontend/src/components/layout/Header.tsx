@@ -6,8 +6,14 @@ export default function Header() {
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           to="/"
-          className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+          className="flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
         >
+          <img
+            src="/janusztrans-logo.png"
+            alt=""
+            aria-hidden="true"
+            className="h-10 w-auto shrink-0"
+          />
           <span className="text-lg font-semibold tracking-tight text-ink-900">JanuszTrans</span>
         </Link>
         <nav aria-label="Main" className="flex items-center gap-6 text-sm text-ink-500">
