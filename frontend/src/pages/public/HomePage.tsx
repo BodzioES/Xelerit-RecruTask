@@ -1,24 +1,77 @@
 import { Link } from "react-router-dom";
 
-import { buttonClassName } from "@/components/ui/Button";
+import Button, { buttonClassName } from "@/components/ui/Button";
 import { SERVICES } from "@/lib/services";
+
+const heroSecondaryButton =
+  "inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 bg-white/5 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6";
 
 export default function HomePage() {
   return (
     <>
-      <section aria-label="JanuszTrans moving van" className="w-full">
+      <section className="relative isolate flex min-h-[calc(100svh-4rem)] w-full items-center overflow-hidden">
         <img
-          src="/hero.jpg"
-          alt="JanuszTrans van ready for a move in the Tri-City area"
-          className="h-[calc(100svh-4rem)] w-full object-cover"
+          src="/main-background-1.webp"
+          alt="Ciężarówka JanuszTrans podczas przeprowadzki"
+          className="absolute inset-0 -z-20 size-full object-cover"
         />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-linear-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20 sm:to-transparent"
+        />
+
+        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+          <div className="max-w-2xl">
+            <p className="inline-block rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur-sm sm:text-sm">
+              Prowadzimy usługi na terenie Trójmiasta i do 30 km od niego
+            </p>
+
+            <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl">
+              Przeprowadzki Gdańsk
+              <span className="block text-brand-500">bez stresu.</span>
+            </h1>
+
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-200 sm:text-lg">
+              Zadbamy o pakowanie, zabezpieczenie, transport i wniesienie. Obsługujemy mieszkania,
+              domy, biura oraz trasy poza Gdańskiem.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button className="px-5 py-3 sm:px-6">
+                Darmowa wycena
+                <span aria-hidden="true">→</span>
+              </Button>
+              <button type="button" className={heroSecondaryButton}>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="size-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
+                  />
+                </svg>
+                Zadzwoń teraz
+              </button>
+            </div>
+
+            <p className="mt-8 text-3xl font-bold tracking-tight text-brand-500 sm:text-5xl">
+              123 456 789
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-14 pt-14 sm:px-6 sm:pt-16">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
+          <h2 className="text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
             Van rental and moving services, without the paperwork.
-          </h1>
+          </h2>
           <p className="mt-5 text-lg leading-relaxed text-ink-500">
             Rent a van, book a driver, or hand the whole move to our crew. One local fleet, clear
             pricing, and no account needed.
