@@ -153,10 +153,7 @@ function BookingWizard({ service }: { service: ServiceMeta }) {
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-[0.18em] text-brand-600">
-        {service.name}
-      </p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
+      <h1 className="text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
         Book your {service.name.toLowerCase()}
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-ink-500">
