@@ -12,7 +12,7 @@ export default function HomePage() {
       <section className="relative isolate flex min-h-[calc(100svh-4rem)] w-full items-center overflow-hidden">
         <img
           src="/main-background-1.webp"
-          alt="Ciężarówka JanuszTrans podczas przeprowadzki"
+          alt="JanuszTrans truck during a move"
           className="absolute inset-0 -z-20 size-full object-cover"
         />
         <div
@@ -23,22 +23,22 @@ export default function HomePage() {
         <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
           <div className="max-w-2xl">
             <p className="inline-block rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur-sm sm:text-sm">
-              Prowadzimy usługi na terenie Trójmiasta i do 30 km od niego
+              We operate in the Tri-City area and up to 30 km around it
             </p>
 
             <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl">
-              Przeprowadzki Gdańsk
-              <span className="block text-brand-500">bez stresu.</span>
+              Moving services in Gdańsk
+              <span className="block text-brand-500">without the stress.</span>
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-200 sm:text-lg">
-              Zadbamy o pakowanie, zabezpieczenie, transport i wniesienie. Obsługujemy mieszkania,
-              domy, biura oraz trasy poza Gdańskiem.
+              We take care of packing, protection, transport and carrying in. We serve apartments,
+              houses, offices and routes outside Gdańsk.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Button className="px-5 py-3 sm:px-6">
-                Darmowa wycena
+                Free quote
                 <span aria-hidden="true">→</span>
               </Button>
               <button type="button" className={heroSecondaryButton}>
@@ -56,7 +56,7 @@ export default function HomePage() {
                     d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
                   />
                 </svg>
-                Zadzwoń teraz
+                Call now
               </button>
             </div>
 
