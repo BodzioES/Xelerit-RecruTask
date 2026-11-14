@@ -397,10 +397,10 @@ The SPA is served by nginx with an `/index.html` fallback, so deep links can be 
 | `/provider/employees` | Employee management (add, edit, deactivate, unavailability blocks) |
 | `/provider/pricing` | Pricing-rule editor for all three services |
 
-The wizard keeps its own draft state and renders only the current step: service → date and
-locations → vehicle → job details → helpers (Full Moving only) → quote → customer details →
-summary. Switching the service keeps the entered locations and contact data and clears only the
-vehicle choice. Validation errors and API failures leave every entered value in place, so a
+The wizard keeps its own draft state and renders only the current step: date and locations →
+vehicle → job details (transport and moving only) → helpers (Full Moving only) → quote → customer
+details → summary. The chosen service comes from the route, so there is no separate service step;
+switching it keeps the entered locations and contact data and clears only the vehicle choice. Validation errors and API failures leave every entered value in place, so a
 failed request never forces the customer to start over.
 
 The quote shown in the wizard comes from `POST /pricing/quote`; the frontend displays the
@@ -431,11 +431,27 @@ handover are rendered from one set of components on both sides.
   but the driver sets it manually. There are no arrival or automatic-return statuses.
 - No separate admin role — the Provider manages all company resources.
 - Item lists and descriptions are booking data; the MVP price does not vary by item count
-  or item type. The quote covers the service, duration, vehicle, distance, helpers, floors,
-  elevator access and the optional additional service.
+  or item type. The quote covers the service, duration, vehicle, distance, helpers, floors and
+  elevator access.
 - Address search, reverse geocoding and route-distance pricing need a Geoapify key. Without it,
   locations can still be validated, and pricing falls back to a straight-line distance that is
   labelled `haversine` in the quote.
+- Self Drive has no mileage limit or overage fee. Only the pickup and return points are checked
+  against the service area, so the van can be driven outside it during the rental. A per-day
+  kilometre allowance, an overage rate and an odometer field would be the natural next step.
+
+## Possible extensions
+
+These are deliberately out of MVP scope, documented so the trade-offs are explicit:
+
+- **E-mail the lockbox code.** Today the code appears only on the guest's private booking page,
+  protected by the access token. Sending it by e-mail (or SMS) after the Provider prepares the
+  handover would be friendlier, but it needs a notifications module with an SMTP/API adapter,
+  templates, retries and a decision about sending sensitive data outside the app.
+- **Mileage policy for Self Drive.** A kilometre allowance per rental day plus a clearly priced
+  overage line in the quote would close the current gap described above.
+- **Second-driver and age rules.** The MVP collects only the booking contact; a rental agreement
+  with driver details, licence checks and an age surcharge would be the next layer.
 
 ## AI usage
 
