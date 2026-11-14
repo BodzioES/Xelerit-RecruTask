@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import select
@@ -9,6 +10,7 @@ from app.core.exceptions import ConfigurationError, NotFoundError, ValidationErr
 from app.core.geo import haversine_distance_km
 from app.core.money import ZERO, money
 from app.db.enums import ServiceType
+from app.modules.locations.routing import route_distance_km
 from app.modules.pricing.models import PricingRule
 from app.modules.pricing.schemas import (
     PricingQuoteRead,
@@ -18,6 +20,7 @@ from app.modules.pricing.schemas import (
 from app.modules.vehicles.models import Vehicle
 
 CURRENCY = "PLN"
+DistanceSource = Literal["routing", "haversine", "none"]
 
 
 def calculate_quote(db: Session, payload: PricingQuoteRequest) -> PricingQuoteRead:
@@ -31,7 +34,7 @@ def calculate_quote(db: Session, payload: PricingQuoteRequest) -> PricingQuoteRe
 
     duration_minutes, requested_hours = _duration(payload.start_datetime, payload.end_datetime)
     billable_hours = max(requested_hours, rule.min_duration_hours)
-    distance_km = _route_distance(payload)
+    distance_km, distance_source = _route_distance(payload)
 
     if payload.service_type == ServiceType.SELF_DRIVE:
         lines = _self_drive_lines(rule, vehicle, billable_hours)
@@ -50,6 +53,7 @@ def calculate_quote(db: Session, payload: PricingQuoteRequest) -> PricingQuoteRe
         helpers=payload.helpers,
         lines=lines,
         total=sum((line.amount for line in lines), ZERO),
+        distance_source=distance_source,
     )
 
 
@@ -76,14 +80,27 @@ def _duration(start: datetime, end: datetime) -> tuple[int, int]:
     return minutes, (minutes + 59) // 60
 
 
-def _route_distance(payload: PricingQuoteRequest) -> Decimal:
+def _route_distance(payload: PricingQuoteRequest) -> tuple[Decimal, DistanceSource]:
     if payload.origin is None or payload.destination is None:
-        return ZERO
-    return haversine_distance_km(
+        return ZERO, "none"
+
+    routed = route_distance_km(
         payload.origin.latitude,
         payload.origin.longitude,
         payload.destination.latitude,
         payload.destination.longitude,
+    )
+    if routed is not None:
+        return routed, "routing"
+
+    return (
+        haversine_distance_km(
+            payload.origin.latitude,
+            payload.origin.longitude,
+            payload.destination.latitude,
+            payload.destination.longitude,
+        ),
+        "haversine",
     )
 
 

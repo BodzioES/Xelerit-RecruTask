@@ -2,10 +2,13 @@ from datetime import timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.core.geo import haversine_distance_km
 from app.db.enums import ServiceType
+from app.modules.pricing import service
 from tests.factories import create_vehicle_via_api
 from tests.pricing_helpers import (
     DAY,
@@ -14,6 +17,12 @@ from tests.pricing_helpers import (
     post_quote,
     quote_payload,
 )
+
+
+@pytest.fixture(autouse=True)
+def _disable_live_routing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep quotes deterministic: tests never call the live Geoapify routing API."""
+    monkeypatch.setattr(settings, "geoapify_api_key", "")
 
 
 def test_self_drive_quote_uses_vehicle_rates(
@@ -129,6 +138,7 @@ def test_van_driver_quote_adds_base_fee_and_backend_distance(
     )
 
     assert Decimal(str(quote["distance_km"])) == distance
+    assert quote["distance_source"] == "haversine"
     assert [line["code"] for line in quote["lines"]] == ["base_price", "hourly_rate", "distance"]
     assert line_amounts(quote) == {
         "base_price": Decimal("100.00"),
@@ -136,6 +146,33 @@ def test_van_driver_quote_adds_base_fee_and_backend_distance(
         "distance": Decimal(str(distance * Decimal("2.00"))).quantize(Decimal("0.01")),
     }
     assert_total_is_sum(quote)
+
+
+def test_quote_uses_routing_distance_when_available(
+    client: TestClient,
+    pricing_rules: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        service,
+        "route_distance_km",
+        lambda *_coordinates: Decimal("21.50"),
+    )
+
+    quote = post_quote(
+        client,
+        quote_payload(
+            ServiceType.VAN_DRIVER,
+            DAY,
+            DAY + timedelta(hours=4),
+            origin={"latitude": "54.352000", "longitude": "18.646600"},
+            destination={"latitude": "54.441800", "longitude": "18.560100"},
+        ),
+    )
+
+    assert quote["distance_source"] == "routing"
+    assert Decimal(str(quote["distance_km"])) == Decimal("21.50")
+    assert line_amounts(quote)["distance"] == Decimal("43.00")
 
 
 def test_van_driver_quote_applies_minimum_and_optional_service(

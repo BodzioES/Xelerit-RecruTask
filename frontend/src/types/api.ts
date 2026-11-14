@@ -22,6 +22,9 @@ export type PropertyType =
   | "retail"
   | "other";
 
+/** Whether the quote distance came from the routing provider or the fallback. */
+export type DistanceSource = "routing" | "haversine" | "none";
+
 /** The API serializes decimal values as strings to avoid float rounding. */
 export type DecimalString = string;
 
@@ -86,6 +89,7 @@ export type Quote = {
   helpers: number;
   lines: QuoteLine[];
   total: DecimalString;
+  distance_source: DistanceSource;
 };
 
 export type BookingVehicle = {
@@ -168,6 +172,7 @@ export type Booking = {
   total_price: DecimalString;
   distance_km: DecimalString | null;
   duration_minutes: number;
+  helpers_requested: number;
   customer_notes: string | null;
   vehicle: BookingVehicle | null;
   locations: BookingLocation[];
@@ -230,6 +235,22 @@ export type ProviderEmployee = {
   last_name: string;
   role: EmployeeRole;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PricingRule = {
+  id: string;
+  service_type: ServiceType;
+  base_price: DecimalString;
+  hourly_rate: DecimalString;
+  daily_rate: DecimalString;
+  price_per_km: DecimalString;
+  helper_rate: DecimalString;
+  floor_surcharge: DecimalString;
+  no_elevator_surcharge: DecimalString;
+  additional_service_price: DecimalString;
+  min_duration_hours: number;
   created_at: string;
   updated_at: string;
 };

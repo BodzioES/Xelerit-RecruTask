@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import (
@@ -84,3 +85,50 @@ class PricingQuoteRead(BaseModel):
     helpers: int
     lines: list[QuoteLine]
     total: Decimal
+    distance_source: Literal["routing", "haversine", "none"]
+
+
+class PricingRuleRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    service_type: ServiceType
+    base_price: Decimal
+    hourly_rate: Decimal
+    daily_rate: Decimal
+    price_per_km: Decimal
+    helper_rate: Decimal
+    floor_surcharge: Decimal
+    no_elevator_surcharge: Decimal
+    additional_service_price: Decimal
+    min_duration_hours: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class PricingRuleUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    base_price: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    hourly_rate: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    daily_rate: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    price_per_km: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    helper_rate: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    floor_surcharge: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    no_elevator_surcharge: Decimal | None = Field(
+        default=None, ge=0, max_digits=10, decimal_places=2
+    )
+    additional_service_price: Decimal | None = Field(
+        default=None, ge=0, max_digits=10, decimal_places=2
+    )
+    min_duration_hours: int | None = Field(default=None, ge=1, le=168)
+
+    @model_validator(mode="after")
+    def require_a_change(self) -> "PricingRuleUpdate":
+        if not self.model_fields_set:
+            raise ValueError("Provide at least one pricing field")
+        null_fields = {field for field in self.model_fields_set if getattr(self, field) is None}
+        if null_fields:
+            names = ", ".join(sorted(null_fields))
+            raise ValueError(f"Fields cannot be null: {names}")
+        return self
