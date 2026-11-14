@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { addHours, combineLocal, formatDate, formatDateTime, formatDuration, formatTime, localDateValue, localTimeValue, pad, toIsoFromLocal } from "./datetime";
+import {
+  addHours,
+  combineLocal,
+  formatDuration,
+  localDateValue,
+  localTimeValue,
+  pad,
+  toIsoFromLocal,
+} from "./datetime";
 
 describe("lib/datetime", () => {
   it("pads numbers", () => {
