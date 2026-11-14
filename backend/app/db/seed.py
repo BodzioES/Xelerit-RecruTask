@@ -125,15 +125,27 @@ VEHICLE_DIMENSIONS: dict[tuple[str, str], tuple[int, int, int]] = {
     ("Iveco", "Daily"): (414, 174, 190),
 }
 
+VEHICLE_IMAGES: dict[tuple[str, str], str] = {
+    ("Renault", "Master"): "/semi-van.webp",
+    ("Fiat", "Ducato"): "/mini-van.webp",
+    ("Ford", "Transit"): "/big-van.webp",
+    ("Iveco", "Daily"): "/big-van.webp",
+}
+
 
 def _seed_vehicles(db: Session) -> None:
     if db.scalar(select(func.count(Vehicle.id))) > 0:
-        # Backfill dimensions for databases seeded before they existed.
+        # Backfill dimensions and images for databases seeded before they existed.
         for vehicle in db.scalars(select(Vehicle)).all():
-            dimensions = VEHICLE_DIMENSIONS.get((vehicle.brand, vehicle.model))
-            if dimensions is None or vehicle.cargo_length_cm is not None:
-                continue
-            vehicle.cargo_length_cm, vehicle.cargo_width_cm, vehicle.cargo_height_cm = dimensions
+            key = (vehicle.brand, vehicle.model)
+            dimensions = VEHICLE_DIMENSIONS.get(key)
+            if dimensions is not None and vehicle.cargo_length_cm is None:
+                vehicle.cargo_length_cm, vehicle.cargo_width_cm, vehicle.cargo_height_cm = (
+                    dimensions
+                )
+            image = VEHICLE_IMAGES.get(key)
+            if image is not None and vehicle.image_url != image:
+                vehicle.image_url = image
         db.commit()
         return
 
@@ -151,7 +163,7 @@ def _seed_vehicles(db: Session) -> None:
                 payload=1400,
                 seats=3,
                 description="Long wheelbase panel van with a high roof and a rear step.",
-                image_url="/vehicles/renault-master.svg",
+                image_url="/semi-van.webp",
                 hourly_price=Decimal("60.00"),
                 daily_price=Decimal("349.00"),
             ),
@@ -167,7 +179,7 @@ def _seed_vehicles(db: Session) -> None:
                 payload=1250,
                 seats=3,
                 description="Comfortable mid-size van, easy to drive in the city.",
-                image_url="/vehicles/fiat-ducato.svg",
+                image_url="/mini-van.webp",
                 hourly_price=Decimal("55.00"),
                 daily_price=Decimal("319.00"),
             ),
@@ -183,7 +195,7 @@ def _seed_vehicles(db: Session) -> None:
                 payload=1500,
                 seats=3,
                 description="Extra-high roof for tall loads and bulky furniture.",
-                image_url="/vehicles/ford-transit.svg",
+                image_url="/big-van.webp",
                 hourly_price=Decimal("65.00"),
                 daily_price=Decimal("379.00"),
             ),
@@ -199,7 +211,7 @@ def _seed_vehicles(db: Session) -> None:
                 payload=1800,
                 seats=3,
                 description="The largest van in the fleet, ideal for full moves.",
-                image_url="/vehicles/iveco-daily.svg",
+                image_url="/big-van.webp",
                 hourly_price=Decimal("70.00"),
                 daily_price=Decimal("419.00"),
             ),

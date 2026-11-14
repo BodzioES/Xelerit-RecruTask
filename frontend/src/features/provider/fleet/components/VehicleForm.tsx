@@ -15,10 +15,9 @@ import type { ProviderVehicle } from "@/types/api";
 import { createProviderVehicle, updateProviderVehicle, type VehicleInput } from "../api";
 
 const IMAGE_PICKS = [
-  { label: "Fiat Ducato", value: "/vehicles/fiat-ducato.svg" },
-  { label: "Ford Transit", value: "/vehicles/ford-transit.svg" },
-  { label: "Iveco Daily", value: "/vehicles/iveco-daily.svg" },
-  { label: "Renault Master", value: "/vehicles/renault-master.svg" },
+  { label: "Mini van", value: "/mini-van.webp" },
+  { label: "Semi van", value: "/semi-van.webp" },
+  { label: "Big van", value: "/big-van.webp" },
 ] as const;
 
 function asNumber(value: string): number | null {

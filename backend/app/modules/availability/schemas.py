@@ -47,6 +47,9 @@ class AvailableVehicleRead(BaseModel):
     year: int
     category: str
     cargo_volume: Decimal
+    cargo_length_cm: int | None
+    cargo_width_cm: int | None
+    cargo_height_cm: int | None
     payload: int
     seats: int
     description: str | None
