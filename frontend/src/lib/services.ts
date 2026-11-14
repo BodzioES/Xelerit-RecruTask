@@ -10,6 +10,8 @@ export type ServiceMeta = {
   points: readonly string[];
   /** One sentence about how the price is built, shown on the site and in the wizard. */
   pricing: string;
+  /** Illustration used on the home page. */
+  image: string;
   requiresVehicle: boolean;
   isMoving: boolean;
 };
@@ -23,6 +25,7 @@ export const SERVICES: readonly ServiceMeta[] = [
     points: ["Hourly or daily rental", "Pickup and return locations", "No account required"],
     pricing:
       "Billed by the hour for short rentals and per 24 hours for longer ones. The price for your dates is shown before you confirm.",
+    image: "/self-drive.webp",
     requiresVehicle: true,
     isMoving: false,
   },
@@ -34,6 +37,7 @@ export const SERVICES: readonly ServiceMeta[] = [
     points: ["Loading and unloading", "Experienced driver", "Clear distance-based quote"],
     pricing:
       "A base fee, the service hours and the route kilometres. The distance follows the real route, not a straight line.",
+    image: "/van-driver.webp",
     requiresVehicle: false,
     isMoving: true,
   },
@@ -45,6 +49,7 @@ export const SERVICES: readonly ServiceMeta[] = [
     points: ["Choose the number of helpers", "Floors and elevator handled", "One price breakdown"],
     pricing:
       "A base fee, service hours, distance, the movers you choose, plus floor and no-elevator surcharges.",
+    image: "/full-moving.webp",
     requiresVehicle: false,
     isMoving: true,
   },

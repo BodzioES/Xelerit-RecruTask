@@ -1,11 +1,28 @@
 import { Link } from "react-router-dom";
 
 import { buttonClassName } from "@/components/ui/Button";
-import ServiceIcon from "@/components/ui/ServiceIcon";
 import { SERVICES } from "@/lib/services";
 
 const heroCallButton =
   "inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 bg-white/5 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6";
+
+const pricingCards = [
+  {
+    title: "Self Drive — hours or days",
+    body: "Under 24 hours you pay the hourly rate. From 24 hours we charge full 24-hour days plus the remaining hours at the hourly rate. Leftover hours never cost more than another day.",
+    example: "A 28-hour rental = 1 day + 4 hours. If those 4 hours cost more than a day, we charge 2 days instead.",
+  },
+  {
+    title: "Van + Driver — time and distance",
+    body: "A base fee, the service hours and the route kilometres. The distance is the real driving route between loading and unloading, not a straight line.",
+    example: null,
+  },
+  {
+    title: "Full Moving — crew and access",
+    body: "A base fee, the service hours, the distance and the number of movers you choose. Floor and no-elevator surcharges are added only when the property needs them.",
+    example: null,
+  },
+];
 
 export default function HomePage() {
   return (
@@ -28,13 +45,13 @@ export default function HomePage() {
             </p>
 
             <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl">
-              Moving and van rental in Gdańsk
+              Moving and van rental in the Tri-City
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-200 sm:text-lg">
               A van you drive yourself, transport with our driver, or a full move with a crew.
               Packing, protection, loading, transport and carrying in — for apartments, houses,
-              offices and routes outside Gdańsk.
+              offices and routes outside the Tri-City area.
             </p>
 
             <div className="mt-8">
@@ -83,11 +100,19 @@ export default function HomePage() {
                 key={service.slug}
                 className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 p-6"
               >
-                <span className="inline-flex size-12 items-center justify-center rounded-xl bg-white text-brand-600 ring-1 ring-slate-200">
-                  <ServiceIcon name={service.slug} />
-                </span>
-                <h3 className="mt-4 text-lg font-semibold text-ink-900">{service.name}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-700">{service.summary}</p>
+                <div className="flex items-start gap-4">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-lg font-semibold text-ink-900">{service.name}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-ink-700">{service.summary}</p>
+                  </div>
+                  <img
+                    src={service.image}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    className="size-24 shrink-0 object-contain"
+                  />
+                </div>
 
                 <ul className="mt-4 space-y-2 text-sm text-ink-700">
                   {service.points.map((point) => (
@@ -118,6 +143,41 @@ export default function HomePage() {
           <p className="mx-auto mt-10 max-w-3xl text-center text-sm text-ink-500">
             We operate in Gdańsk, Gdynia and Sopot, and up to 30 km around them. Every address is
             checked against the service area before you can book.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-slate-50">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+              How the price is calculated
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-ink-500">
+              Every quote is calculated on our side before you confirm. It is recalculated when the
+              booking is created, so the price you accept is the price you pay.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+            {pricingCards.map((card) => (
+              <article
+                key={card.title}
+                className="rounded-2xl border border-slate-200 bg-white p-6"
+              >
+                <h3 className="text-base font-semibold text-ink-900">{card.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-700">{card.body}</p>
+                {card.example ? (
+                  <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-ink-500">
+                    {card.example}
+                  </p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+
+          <p className="mt-6 text-sm text-ink-500">
+            Prices are in PLN. The quote step lists every line before you place the booking.
           </p>
         </div>
       </section>
