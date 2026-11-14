@@ -156,6 +156,7 @@ function BookingWizard({ service }: { service: ServiceMeta }) {
       <h1 className="text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
         Book your {service.name.toLowerCase()}
       </h1>
+      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-700">{service.summary}</p>
       <p className="mt-2 max-w-2xl text-sm text-ink-500">
         No account needed. The booking is created as <strong>Pending review</strong> and the
         Provider confirms it before the service starts.

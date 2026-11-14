@@ -1,27 +1,23 @@
 import { Link } from "react-router-dom";
 
-import Button, { buttonClassName } from "@/components/ui/Button";
+import { buttonClassName } from "@/components/ui/Button";
 import { SERVICES } from "@/lib/services";
 
 const heroSecondaryButton =
   "inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 bg-white/5 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6";
 
-const WHAT_WE_DO = [
+const HOW_IT_WORKS = [
   {
-    title: "Home and office moves",
-    body: "Packing, protection, loading, transport and carrying in or out for apartments, houses and offices.",
+    title: "Pick a service and a date",
+    body: "Self-drive van rental, transport with a driver, or a full move with a crew. Then set the addresses and the time window.",
   },
   {
-    title: "Self-drive van rental",
-    body: "Clean, well-kept vans by the hour or day, with pickup and return in the Tri-City area.",
+    title: "See the price before you book",
+    body: "The quote is calculated from the distance, the duration, the vehicle and the number of helpers, so the total is clear upfront.",
   },
   {
-    title: "Furniture and appliance transport",
-    body: "Single large items, appliances, boxes and small loads moved by an experienced driver.",
-  },
-  {
-    title: "Clear-outs and disposal",
-    body: "Removal of old furniture, bulky items and move-related waste, including proper disposal.",
+    title: "We confirm and send the details",
+    body: "Every booking starts as Pending review. Once we confirm it, you get a private status link with the handover code or pickup instructions.",
   },
 ] as const;
 
@@ -46,21 +42,25 @@ export default function HomePage() {
             </p>
 
             <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl">
-              Moving services in Gdańsk
+              Moving and van rental in Gdańsk
               <span className="block text-brand-500">without the stress.</span>
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-200 sm:text-lg">
-              We take care of packing, protection, transport and carrying in. We serve apartments,
-              houses, offices and routes outside Gdańsk.
+              A van you drive yourself, transport with our driver, or a full move with a crew.
+              Packing, protection, loading, transport and carrying in — for apartments, houses,
+              offices and routes outside Gdańsk.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button className="px-5 py-3 sm:px-6">
+              <Link
+                to="/book/full-moving"
+                className={buttonClassName("primary", "px-5 py-3 sm:px-6")}
+              >
                 Free quote
                 <span aria-hidden="true">→</span>
-              </Button>
-              <button type="button" className={heroSecondaryButton}>
+              </Link>
+              <a href="tel:+48123456789" className={heroSecondaryButton}>
                 <svg
                   aria-hidden="true"
                   viewBox="0 0 24 24"
@@ -76,7 +76,7 @@ export default function HomePage() {
                   />
                 </svg>
                 Call now
-              </button>
+              </a>
             </div>
 
             <p className="mt-8 text-3xl font-bold tracking-tight text-brand-500 sm:text-5xl">
@@ -86,51 +86,40 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-4 pb-10 pt-14 text-center sm:px-6 sm:pt-16">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
-            Van rental and moving services, without the paperwork.
-          </h2>
-          <p className="mt-5 text-lg leading-relaxed text-ink-500">
-            Rent a van, book a driver, or hand the whole move to our crew. One local fleet, clear
-            pricing, and no account needed.
-          </p>
-        </div>
-      </section>
-
       <section className="border-y border-slate-200 bg-white">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
-              Moving, transport and clear-outs
+              How booking works
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-ink-500">
-              One local team and one fleet for home and office moves, van rental, furniture
-              transport and waste removal across the Tri-City area.
+              One local team and one fleet for moving, transport and van rental. No account needed —
+              you book as a guest and we confirm the details.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {WHAT_WE_DO.map((item) => (
-              <article
-                key={item.title}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
-              >
-                <h3 className="text-base font-semibold text-ink-900">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-500">{item.body}</p>
-              </article>
+          <ol className="mt-10 grid gap-4 sm:grid-cols-3">
+            {HOW_IT_WORKS.map((step) => (
+              <li key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <h3 className="text-base font-semibold text-ink-900">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-500">{step.body}</p>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-14 pt-12 sm:px-6 sm:pt-14">
         <div id="services" className="scroll-mt-20">
           <h2 className="text-center text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
-            Choose your service
+            Moving, transport and van rental
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-base leading-relaxed text-ink-500">
+            Three services, one fleet: drive the van yourself, let our driver take a single load, or
+            hand the whole move to our crew.
+          </p>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {SERVICES.map((service) => (
               <article
                 key={service.slug}
