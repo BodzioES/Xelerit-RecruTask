@@ -38,7 +38,6 @@ export default function StepSummary({
   submitError,
 }: SummaryStepProps) {
   const [accepted, setAccepted] = useState(false);
-  const [termsError, setTermsError] = useState<string | null>(null);
   const selfDrive = isSelfDrive(draft);
   const moving = draft.serviceType === "full_moving";
   const movingDetails = draft.movingDetails;
@@ -47,10 +46,6 @@ export default function StepSummary({
   const propertyLabel =
     PROPERTY_TYPE_OPTIONS.find((option) => option.value === movingDetails.propertyType)?.label ??
     movingDetails.propertyType;
-  const carryLabels = [
-    movingDetails.needsCarryIn ? "Into the new property" : null,
-    movingDetails.needsCarryOut ? "Out of the current property" : null,
-  ].filter((label): label is string => label !== null);
   const itemSummary = draft.items
     .filter((item) => item.itemName.trim())
     .map((item) => `${item.itemName.trim()} ×${item.quantity || "1"}`)
@@ -72,11 +67,7 @@ export default function StepSummary({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (!accepted) {
-      setTermsError("Confirm the details and terms before placing the booking.");
-      return;
-    }
-    setTermsError(null);
+    if (!accepted) return;
     onSubmit();
   }
 
@@ -110,9 +101,6 @@ export default function StepSummary({
                 : ""}
             </SummaryRow>
           ) : null}
-          {moving && carryLabels.length > 0 ? (
-            <SummaryRow label="Carry service">{carryLabels.join(", ")}</SummaryRow>
-          ) : null}
           {moving && movingDetails.boxesCount !== "" ? (
             <SummaryRow label="Boxes">{movingDetails.boxesCount}</SummaryRow>
           ) : null}
@@ -122,11 +110,6 @@ export default function StepSummary({
               {draft.helpers === 0
                 ? "No helpers"
                 : `${draft.helpers} ${draft.helpers === 1 ? "helper" : "helpers"}`}
-            </SummaryRow>
-          ) : null}
-          {!selfDrive ? (
-            <SummaryRow label="Additional service">
-              {draft.additionalService ? "Yes" : "No"}
             </SummaryRow>
           ) : null}
           <SummaryRow label="Contact">
@@ -161,11 +144,8 @@ export default function StepSummary({
             type="checkbox"
             className={checkboxClassName}
             checked={accepted}
-            onChange={(event) => {
-              setAccepted(event.target.checked);
-              if (event.target.checked) setTermsError(null);
-            }}
-            aria-invalid={termsError ? true : undefined}
+            onChange={(event) => setAccepted(event.target.checked)}
+            required
           />
           <span>
             I confirm the details above are correct. I understand that the booking is created with
@@ -174,7 +154,6 @@ export default function StepSummary({
             service begins.
           </span>
         </label>
-        {termsError ? <p className="mt-2 text-sm text-rose-700">{termsError}</p> : null}
       </Panel>
 
       {submitError ? (
@@ -186,9 +165,13 @@ export default function StepSummary({
       <WizardFooter
         onBack={onBack}
         submitLabel="Place booking"
-        hint="You will get a booking number and a private status link."
+        hint={
+          accepted
+            ? "You will get a booking number and a private status link."
+            : "Tick the confirmation above to place the booking."
+        }
         isBusy={isSubmitting}
-        disabled={quote.isPending || quote.isError}
+        disabled={quote.isPending || quote.isError || !accepted}
       />
     </form>
   );

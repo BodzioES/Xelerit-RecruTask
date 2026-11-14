@@ -4,7 +4,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import Button from "@/components/ui/Button";
 import Notice from "@/components/ui/Notice";
-import ServiceIcon from "@/components/ui/ServiceIcon";
 import StepCustomer from "@/features/booking/components/StepCustomer";
 import StepDetails from "@/features/booking/components/StepDetails";
 import StepHelpers from "@/features/booking/components/StepHelpers";
@@ -156,21 +155,9 @@ function BookingWizard({ service }: { service: ServiceMeta }) {
       </h1>
 
       <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-        <div className="flex items-start gap-3">
-          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-            <ServiceIcon name={service.slug} className="size-6" />
-          </span>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-ink-900">{service.summary}</p>
-            <p className="text-sm leading-relaxed text-ink-500">{service.pricing}</p>
-          </div>
-        </div>
+        <p className="text-sm font-medium text-ink-900">{service.summary}</p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-500">{service.pricing}</p>
       </div>
-
-      <p className="mt-3 max-w-2xl text-sm text-ink-500">
-        No account needed. The booking is created as <strong>Pending review</strong> and the
-        Provider confirms it before the service starts.
-      </p>
 
       <div className="mt-8">
         <StepIndicator steps={steps} currentIndex={stepIndex} />

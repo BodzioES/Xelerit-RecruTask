@@ -47,12 +47,9 @@ export function createInitialDraft(serviceType: ServiceType): BookingDraft {
       propertyType: "apartment",
       floor: "",
       elevator: "",
-      needsCarryIn: false,
-      needsCarryOut: false,
       boxesCount: "",
       itemsDescription: "",
     },
-    additionalService: false,
     customer: { firstName: "", lastName: "", email: "", phone: "", notes: "" },
   };
 }
@@ -112,7 +109,7 @@ export function quoteRequestFromDraft(
     helpers: moving ? draft.helpers : 0,
     floor: moving ? floor : null,
     has_elevator: moving ? hasElevator : null,
-    additional_service: draft.additionalService,
+    additional_service: false,
     origin: draftOrigin(draft),
     destination: draftDestination(draft),
   };
@@ -175,7 +172,7 @@ export function buildCreateRequest(
     end_datetime: endIso,
     vehicle_id: draft.vehicleId,
     helpers: moving ? Math.min(draft.helpers, MAX_HELPERS) : 0,
-    additional_service: draft.additionalService,
+    additional_service: false,
     customer_notes: draft.customer.notes.trim() || null,
     locations: rawLocations,
     items,
@@ -184,8 +181,8 @@ export function buildCreateRequest(
           property_type: draft.movingDetails.propertyType,
           floor,
           has_elevator: showFloor && floor !== null && floor > 0 ? draft.movingDetails.elevator === "yes" : null,
-          needs_carry_in: draft.movingDetails.needsCarryIn,
-          needs_carry_out: draft.movingDetails.needsCarryOut,
+          needs_carry_in: false,
+          needs_carry_out: false,
           boxes_count: boxes,
           items_description: draft.movingDetails.itemsDescription.trim() || null,
         }

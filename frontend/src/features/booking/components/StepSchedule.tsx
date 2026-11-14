@@ -11,7 +11,7 @@ import type { WizardStepProps } from "../steps";
 import { hasErrors, validateSchedule, type StepErrors } from "../validation";
 import WizardFooter from "./WizardFooter";
 
-const DURATION_OPTIONS = [2, 3, 4, 6, 8] as const;
+const DURATION_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 export default function StepSchedule({ draft, onChange, onNext, onBack }: WizardStepProps) {
   const [errors, setErrors] = useState<StepErrors>({});

@@ -20,8 +20,6 @@ export type MovingDetailsDraft = {
   propertyType: PropertyType;
   floor: string;
   elevator: "" | "yes" | "no";
-  needsCarryIn: boolean;
-  needsCarryOut: boolean;
   boxesCount: string;
   itemsDescription: string;
 };
@@ -50,7 +48,6 @@ export type BookingDraft = {
   helpers: number;
   items: DraftItem[];
   movingDetails: MovingDetailsDraft;
-  additionalService: boolean;
   customer: CustomerDraft;
 };
 
