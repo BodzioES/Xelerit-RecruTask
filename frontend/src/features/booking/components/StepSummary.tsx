@@ -16,6 +16,7 @@ import {
   quoteRequestFromDraft,
 } from "../draft";
 import type { WizardStepProps } from "../steps";
+import { FLOOR_PROPERTY_TYPES, PROPERTY_TYPE_OPTIONS } from "../types";
 import QuoteBreakdown from "./QuoteBreakdown";
 import SummaryRow from "@/components/ui/SummaryRow";
 import WizardFooter from "./WizardFooter";
@@ -39,6 +40,21 @@ export default function StepSummary({
   const [accepted, setAccepted] = useState(false);
   const [termsError, setTermsError] = useState<string | null>(null);
   const selfDrive = isSelfDrive(draft);
+  const moving = draft.serviceType === "full_moving";
+  const movingDetails = draft.movingDetails;
+  const showFloor = moving && FLOOR_PROPERTY_TYPES.has(movingDetails.propertyType);
+  const floor = showFloor && movingDetails.floor !== "" ? movingDetails.floor : null;
+  const propertyLabel =
+    PROPERTY_TYPE_OPTIONS.find((option) => option.value === movingDetails.propertyType)?.label ??
+    movingDetails.propertyType;
+  const carryLabels = [
+    movingDetails.needsCarryIn ? "Into the new property" : null,
+    movingDetails.needsCarryOut ? "Out of the current property" : null,
+  ].filter((label): label is string => label !== null);
+  const itemSummary = draft.items
+    .filter((item) => item.itemName.trim())
+    .map((item) => `${item.itemName.trim()} ×${item.quantity || "1"}`)
+    .join(", ");
   const startIso = draftStartIso(draft);
   const endIso = draftEndIso(draft);
   const request = startIso && endIso ? quoteRequestFromDraft(draft, startIso, endIso) : null;
@@ -83,7 +99,25 @@ export default function StepSummary({
           <SummaryRow label={selfDrive ? "Return" : "Unloading"}>
             {selfDrive ? draft.returnLocation.address : draft.unloading.address}
           </SummaryRow>
-          {draft.serviceType === "full_moving" ? (
+          {moving ? (
+            <SummaryRow label="Property">
+              {propertyLabel}
+              {floor !== null ? `, floor ${floor}` : ""}
+              {floor !== null && Number(floor) > 0
+                ? movingDetails.elevator === "yes"
+                  ? ", elevator"
+                  : ", no elevator"
+                : ""}
+            </SummaryRow>
+          ) : null}
+          {moving && carryLabels.length > 0 ? (
+            <SummaryRow label="Carry service">{carryLabels.join(", ")}</SummaryRow>
+          ) : null}
+          {moving && movingDetails.boxesCount !== "" ? (
+            <SummaryRow label="Boxes">{movingDetails.boxesCount}</SummaryRow>
+          ) : null}
+          {!selfDrive && itemSummary ? <SummaryRow label="Items">{itemSummary}</SummaryRow> : null}
+          {moving ? (
             <SummaryRow label="Helpers">
               {draft.helpers === 0
                 ? "No helpers"

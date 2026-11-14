@@ -36,10 +36,10 @@ def ensure_transition(booking: Booking, new_status: BookingStatus) -> None:
             f"Cannot change status from {booking.status.value} to {new_status.value}"
         )
 
-    if new_status == BookingStatus.READY_FOR_PICKUP and booking.service_type != (
-        ServiceType.SELF_DRIVE
-    ):
-        raise ValidationError("Only self-drive bookings can be ready for pickup")
+    if new_status == BookingStatus.READY_FOR_PICKUP:
+        if booking.service_type != ServiceType.SELF_DRIVE:
+            raise ValidationError("Only self-drive bookings can be ready for pickup")
+        _ensure_handover_prepared(booking)
 
     if (
         booking.service_type == ServiceType.SELF_DRIVE
@@ -47,6 +47,17 @@ def ensure_transition(booking: Booking, new_status: BookingStatus) -> None:
         and new_status == BookingStatus.IN_PROGRESS
     ):
         raise ConflictError("Self-drive bookings must be ready for pickup before they start")
+
+
+def _ensure_handover_prepared(booking: Booking) -> None:
+    """The customer cannot collect the van without a code and pickup instructions."""
+    handover = booking.handover
+    if handover is None or handover.access_code_encrypted is None:
+        raise ValidationError(
+            "Generate the lockbox access code before marking the booking ready for pickup"
+        )
+    if not (handover.pickup_instructions or "").strip():
+        raise ValidationError("Add pickup instructions before marking the booking ready for pickup")
 
 
 def ensure_guest_cancel(booking: Booking) -> None:

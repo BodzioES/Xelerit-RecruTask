@@ -64,12 +64,16 @@ export function validateDetails(draft: BookingDraft): StepErrors {
   const { movingDetails } = draft;
   const showFloor = FLOOR_PROPERTY_TYPES.has(movingDetails.propertyType);
 
-  if (showFloor && movingDetails.floor !== "") {
-    const floor = Number(movingDetails.floor);
-    if (!Number.isInteger(floor) || floor < 0 || floor > 200) {
-      errors.floor = "Enter a floor between 0 and 200.";
-    } else if (floor > 0 && !movingDetails.elevator) {
-      errors.elevator = "Tell us whether the building has an elevator.";
+  if (showFloor) {
+    if (movingDetails.floor === "") {
+      errors.floor = "Enter the floor (0 for the ground floor).";
+    } else {
+      const floor = Number(movingDetails.floor);
+      if (!Number.isInteger(floor) || floor < 0 || floor > 200) {
+        errors.floor = "Enter a floor between 0 and 200.";
+      } else if (floor > 0 && !movingDetails.elevator) {
+        errors.elevator = "Tell us whether the building has an elevator.";
+      }
     }
   }
 

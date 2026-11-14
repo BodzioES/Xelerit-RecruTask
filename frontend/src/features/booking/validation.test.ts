@@ -5,7 +5,14 @@ import type { BookingDraft, DraftLocation } from "./types";
 import { firstErrorMessage, hasErrors, validateDetails, validateSchedule } from "./validation";
 
 function location(overrides: Partial<DraftLocation> = {}): DraftLocation {
-  return { address: "ul. Testowa 1", latitude: 54.4, longitude: 18.6, inServiceArea: true, ...overrides };
+  return {
+    address: "ul. Testowa 1",
+    latitude: 54.4,
+    longitude: 18.6,
+    placeId: null,
+    inServiceArea: true,
+    ...overrides,
+  };
 }
 
 function validSelfDriveDraft(): BookingDraft {
@@ -26,6 +33,8 @@ function validMovingDraft(): BookingDraft {
   draft.durationHours = 4;
   draft.loading = location();
   draft.unloading = location({ address: "ul. Inna 2" });
+  draft.movingDetails.floor = "0";
+  draft.movingDetails.elevator = "";
   return draft;
 }
 
@@ -90,6 +99,23 @@ describe("validateDetails", () => {
     draft.movingDetails.floor = "3";
     draft.movingDetails.elevator = "";
     expect(validateDetails(draft).elevator).toBe("Tell us whether the building has an elevator.");
+  });
+
+  it.each(["apartment", "office", "retail"] as const)(
+    "requires a floor for a %s",
+    (propertyType) => {
+      const draft = validMovingDraft();
+      draft.movingDetails.propertyType = propertyType;
+      draft.movingDetails.floor = "";
+      expect(validateDetails(draft).floor).toBe("Enter the floor (0 for the ground floor).");
+    },
+  );
+
+  it("does not require a floor for a house", () => {
+    const draft = validMovingDraft();
+    draft.movingDetails.propertyType = "house";
+    draft.movingDetails.floor = "";
+    expect(validateDetails(draft)).toEqual({});
   });
 
   it("accepts ground floor without an elevator answer", () => {

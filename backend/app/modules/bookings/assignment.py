@@ -227,6 +227,7 @@ def _validated_employees(db: Session, booking: Booking, employee_ids: list[UUID]
 
 def _validate_roles(booking: Booking, employees: list[Employee]) -> None:
     drivers = [employee for employee in employees if employee.role == EmployeeRole.DRIVER]
+    movers = [employee for employee in employees if employee.role == EmployeeRole.MOVER]
 
     if booking.service_type == ServiceType.SELF_DRIVE:
         if employees:
@@ -236,8 +237,16 @@ def _validate_roles(booking: Booking, employees: list[Employee]) -> None:
     if len(drivers) != 1:
         raise ValidationError("Exactly one driver is required")
 
-    if booking.service_type == ServiceType.VAN_DRIVER and len(employees) != 1:
-        raise ValidationError("Van + Driver requires exactly one driver and no movers")
+    if booking.service_type == ServiceType.VAN_DRIVER:
+        if movers:
+            raise ValidationError("Van + Driver requires exactly one driver and no movers")
+        return
+
+    if len(movers) != booking.helpers_requested:
+        raise ValidationError(
+            "Full Moving requires exactly "
+            f"{booking.helpers_requested} movers requested by the customer"
+        )
 
 
 def _replace_assignments(db: Session, booking: Booking, employees: list[Employee]) -> None:

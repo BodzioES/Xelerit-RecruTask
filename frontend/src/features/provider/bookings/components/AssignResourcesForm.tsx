@@ -67,6 +67,8 @@ export default function AssignResourcesForm({ booking }: Props) {
 
   const requiresStaff = booking.service_type !== "self_drive";
   const isMoving = booking.service_type === "full_moving";
+  const requiredMovers = booking.helpers_requested;
+  const moversComplete = !isMoving || moverIds.length === requiredMovers;
   const start = booking.start_datetime;
   const end = booking.end_datetime;
 
@@ -135,12 +137,12 @@ export default function AssignResourcesForm({ booking }: Props) {
     );
   }
 
-  const canSave = Boolean(vehicleId) && (!requiresStaff || Boolean(driverId));
+  const canSave = Boolean(vehicleId) && (!requiresStaff || Boolean(driverId)) && moversComplete;
   const staffHint =
     booking.service_type === "self_drive"
       ? "Self Drive uses a vehicle only."
       : isMoving
-        ? "Full Moving needs exactly one driver; add movers as needed."
+        ? `Full Moving needs exactly one driver and ${requiredMovers} ${requiredMovers === 1 ? "mover" : "movers"} requested by the customer.`
         : "Van + Driver needs exactly one driver and no movers.";
 
   return (
@@ -179,7 +181,9 @@ export default function AssignResourcesForm({ booking }: Props) {
 
             {isMoving ? (
               <fieldset>
-                <legend className="text-sm font-medium text-ink-700">Movers</legend>
+                <legend className="text-sm font-medium text-ink-700">
+                  Movers ({moverIds.length}/{requiredMovers} selected)
+                </legend>
                 {moverOptions.length === 0 ? (
                   <p className="mt-1 text-sm text-ink-500">
                     No movers are free for this window, or none are active.
@@ -202,6 +206,12 @@ export default function AssignResourcesForm({ booking }: Props) {
                     ))}
                   </div>
                 )}
+                {!moversComplete ? (
+                  <p className="mt-2 text-sm text-amber-700">
+                    Select exactly {requiredMovers} {requiredMovers === 1 ? "mover" : "movers"} to
+                    match the customer's request.
+                  </p>
+                ) : null}
               </fieldset>
             ) : null}
           </>

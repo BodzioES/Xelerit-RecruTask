@@ -144,7 +144,7 @@ export default function StepDetails({ draft, onChange, onNext, onBack }: WizardS
                       updateMovingDetails({ needsCarryIn: event.target.checked })
                     }
                   />
-                  <span>Carry items out of the current property</span>
+                  <span>Carry items into the new property</span>
                 </label>
                 <label className="flex items-start gap-2 text-sm text-ink-700">
                   <input
@@ -155,7 +155,7 @@ export default function StepDetails({ draft, onChange, onNext, onBack }: WizardS
                       updateMovingDetails({ needsCarryOut: event.target.checked })
                     }
                   />
-                  <span>Carry items into the new property</span>
+                  <span>Carry items out of the current property</span>
                 </label>
               </div>
 

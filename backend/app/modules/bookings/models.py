@@ -58,6 +58,10 @@ class Booking(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="ck_bookings_distance_non_negative",
         ),
         CheckConstraint("duration_minutes > 0", name="ck_bookings_duration_positive"),
+        CheckConstraint(
+            "helpers_requested >= 0",
+            name="ck_bookings_helpers_requested_non_negative",
+        ),
         Index("ix_bookings_vehicle_window", "vehicle_id", "start_datetime", "end_datetime"),
         Index("ix_bookings_status", "status"),
         Index("ix_bookings_customer_email", "customer_email"),
@@ -108,6 +112,11 @@ class Booking(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     distance_km: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
     duration_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    # The customer's declared crew size. It stays on the booking so reassignment
+    # cannot silently reduce a Full Moving crew below what was ordered.
+    helpers_requested: Mapped[int] = mapped_column(
+        SmallInteger, nullable=False, default=0, server_default="0"
+    )
 
     customer_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     access_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)

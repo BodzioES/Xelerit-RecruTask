@@ -74,11 +74,29 @@ def test_self_drive_status_lifecycle_enforces_ready_for_pickup(
         build_booking_payload(ServiceType.SELF_DRIVE, vehicle_id=vehicle["id"]),
     )
     url = f"/api/v1/provider/bookings/{body['id']}/status"
+    handover_url = f"/api/v1/bookings/{body['id']}/handover"
 
     assert client.patch(url, json={"status": "confirmed"}, headers=auth_headers).status_code == 200
     response = client.patch(url, json={"status": "in_progress"}, headers=auth_headers)
     assert response.status_code == 409, response.text
 
+    # The handover must exist before the customer can be told to collect the van.
+    response = client.patch(url, json={"status": "ready_for_pickup"}, headers=auth_headers)
+    assert response.status_code == 400, response.text
+
+    client.post(
+        handover_url,
+        json={"generate_code": True},
+        headers=auth_headers,
+    )
+    response = client.patch(url, json={"status": "ready_for_pickup"}, headers=auth_headers)
+    assert response.status_code == 400, response.text
+
+    client.post(
+        handover_url,
+        json={"pickup_instructions": "Lockbox is next to the driver's door."},
+        headers=auth_headers,
+    )
     assert (
         client.patch(url, json={"status": "ready_for_pickup"}, headers=auth_headers).status_code
         == 200
@@ -133,6 +151,53 @@ def test_van_driver_cannot_be_ready_for_pickup_and_needs_one_driver(
         headers=auth_headers,
     )
     assert response.status_code == 400, response.text
+
+
+def test_reassignment_requires_the_customer_helper_count(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    created_resources: dict[str, list[UUID]],
+) -> None:
+    vehicle = create_vehicle_via_api(client, auth_headers, created_resources)
+    driver = create_employee_via_api(client, auth_headers, created_resources, role="driver")
+    first_mover = create_employee_via_api(
+        client, auth_headers, created_resources, role="mover", first_name="First"
+    )
+    second_mover = create_employee_via_api(
+        client, auth_headers, created_resources, role="mover", first_name="Second"
+    )
+    body = create_booking_via_api(
+        client,
+        created_resources,
+        build_booking_payload(
+            ServiceType.FULL_MOVING,
+            vehicle_id=vehicle["id"],
+            hours=8,
+            helpers=2,
+        ),
+    )
+    assert body["helpers_requested"] == 2
+
+    assignment_url = f"/api/v1/provider/bookings/{body['id']}/assign-resources"
+    response = client.post(
+        assignment_url,
+        json={"employee_ids": [driver["id"], first_mover["id"]]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 400, response.text
+
+    response = client.post(
+        assignment_url,
+        json={"employee_ids": [driver["id"], first_mover["id"], second_mover["id"]]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    movers = [
+        assignment
+        for assignment in response.json()["assignments"]
+        if assignment["employee"]["role"] == "mover"
+    ]
+    assert len(movers) == 2
 
 
 def test_provider_can_reassign_vehicle_and_driver(

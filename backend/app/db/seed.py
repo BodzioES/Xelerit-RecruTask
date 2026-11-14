@@ -251,6 +251,7 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
         total_price=Decimal("1879.00"),
         distance_km=Decimal("18.40"),
         duration_minutes=480,
+        helpers_requested=2,
         customer_notes="Please call 15 minutes before arrival. Breakable items are marked.",
     )
     moving.locations = [

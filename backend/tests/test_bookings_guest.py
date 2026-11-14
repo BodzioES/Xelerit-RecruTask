@@ -199,6 +199,44 @@ def test_booking_requires_a_future_start(
     assert response.status_code == 422, response.text
 
 
+def test_full_moving_requires_a_floor_for_apartments(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    created_resources: dict[str, list[UUID]],
+) -> None:
+    vehicle = create_vehicle_via_api(client, auth_headers, created_resources)
+    create_employee_via_api(client, auth_headers, created_resources, role="driver")
+    payload = build_booking_payload(ServiceType.FULL_MOVING, vehicle_id=vehicle["id"])
+    payload["moving_details"] = {
+        "property_type": "apartment",
+        "has_elevator": True,
+        "needs_carry_in": False,
+        "needs_carry_out": False,
+    }
+
+    response = client.post("/api/v1/bookings", json=payload)
+    assert response.status_code == 422, response.text
+    assert "floor" in response.text
+
+
+def test_full_moving_house_does_not_require_a_floor(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    created_resources: dict[str, list[UUID]],
+) -> None:
+    vehicle = create_vehicle_via_api(client, auth_headers, created_resources)
+    create_employee_via_api(client, auth_headers, created_resources, role="driver")
+    payload = build_booking_payload(ServiceType.FULL_MOVING, vehicle_id=vehicle["id"])
+    payload["moving_details"] = {
+        "property_type": "house",
+        "needs_carry_in": True,
+        "needs_carry_out": True,
+    }
+
+    body = create_booking_via_api(client, created_resources, payload)
+    assert body["moving_details"]["floor"] is None
+
+
 def test_van_driver_booking_accepts_items(
     client: TestClient,
     auth_headers: dict[str, str],

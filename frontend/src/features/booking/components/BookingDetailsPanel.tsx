@@ -53,6 +53,12 @@ export default function BookingDetailsPanel({ booking }: Props) {
               .join(", ")}
           </SummaryRow>
         ) : null}
+        {booking.service_type === "full_moving" ? (
+          <SummaryRow label="Helpers requested">
+            {booking.helpers_requested}{" "}
+            {booking.helpers_requested === 1 ? "mover" : "movers"}
+          </SummaryRow>
+        ) : null}
         {moving ? (
           <SummaryRow label="Property">
             {PROPERTY_LABELS[moving.property_type]}
@@ -64,6 +70,19 @@ export default function BookingDetailsPanel({ booking }: Props) {
               : ""}
             {moving.boxes_count !== null ? ` · ${moving.boxes_count} boxes` : ""}
           </SummaryRow>
+        ) : null}
+        {moving && (moving.needs_carry_in || moving.needs_carry_out) ? (
+          <SummaryRow label="Carry service">
+            {[
+              moving.needs_carry_in ? "Into the new property" : null,
+              moving.needs_carry_out ? "Out of the current property" : null,
+            ]
+              .filter(Boolean)
+              .join(", ")}
+          </SummaryRow>
+        ) : null}
+        {moving?.items_description ? (
+          <SummaryRow label="Loading conditions">{moving.items_description}</SummaryRow>
         ) : null}
         <SummaryRow label="Contact">
           {booking.customer_first_name} {booking.customer_last_name}

@@ -62,6 +62,7 @@ def create_booking(db: Session, payload: BookingCreate) -> tuple[Booking, str]:
         total_price=money(quote.total),
         distance_km=quote.distance_km,
         duration_minutes=quote.duration_minutes,
+        helpers_requested=payload.helpers,
         customer_notes=payload.customer_notes,
         access_token_hash=token_hash,
     )

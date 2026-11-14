@@ -24,6 +24,7 @@ from app.db.enums import (
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 MOVING_LOCATIONS = frozenset({LocationType.LOADING, LocationType.UNLOADING})
 RENTAL_LOCATIONS = frozenset({LocationType.PICKUP, LocationType.RETURN})
+FLOOR_PROPERTY_TYPES = frozenset({PropertyType.APARTMENT, PropertyType.OFFICE, PropertyType.RETAIL})
 
 
 class BookingLocationInput(BaseModel):
@@ -58,6 +59,10 @@ class BookingMovingDetailsInput(BaseModel):
 
     @model_validator(mode="after")
     def validate_elevator(self) -> "BookingMovingDetailsInput":
+        # Apartments, offices and retail units always have a storey, so the
+        # customer must supply it instead of the Provider guessing the access.
+        if self.property_type in FLOOR_PROPERTY_TYPES and self.floor is None:
+            raise ValueError("floor is required for this property type")
         if self.has_elevator is not None and self.floor is None:
             raise ValueError("has_elevator requires floor")
         if self.floor is not None and self.floor > 0 and self.has_elevator is None:
@@ -227,6 +232,7 @@ class BookingRead(BaseModel):
     total_price: Decimal
     distance_km: Decimal | None
     duration_minutes: int
+    helpers_requested: int
     customer_notes: str | None
     vehicle: BookingVehicleRead | None
     locations: list[BookingLocationRead]
