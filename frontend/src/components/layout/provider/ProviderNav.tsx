@@ -9,6 +9,7 @@ const LINKS = [
   { to: "/provider/bookings", label: "Bookings", end: false },
   { to: "/provider/vehicles", label: "Fleet", end: false },
   { to: "/provider/employees", label: "Employees", end: false },
+  { to: "/provider/pricing", label: "Pricing", end: false },
 ] as const;
 
 type Props = {

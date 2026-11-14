@@ -11,6 +11,7 @@ const ProviderBookingsPage = lazy(() => import("@/pages/provider/ProviderBooking
 const ProviderBookingPage = lazy(() => import("@/pages/provider/ProviderBookingPage"));
 const ProviderVehiclesPage = lazy(() => import("@/pages/provider/ProviderVehiclesPage"));
 const ProviderEmployeesPage = lazy(() => import("@/pages/provider/ProviderEmployeesPage"));
+const ProviderPricingPage = lazy(() => import("@/pages/provider/ProviderPricingPage"));
 
 export default function ProviderApp() {
   return (
@@ -63,6 +64,14 @@ export default function ProviderApp() {
             element={
               <PageBoundary>
                 <ProviderEmployeesPage />
+              </PageBoundary>
+            }
+          />
+          <Route
+            path="pricing"
+            element={
+              <PageBoundary>
+                <ProviderPricingPage />
               </PageBoundary>
             }
           />
