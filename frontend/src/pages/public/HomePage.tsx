@@ -6,6 +6,25 @@ import { SERVICES } from "@/lib/services";
 const heroSecondaryButton =
   "inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 bg-white/5 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6";
 
+const WHAT_WE_DO = [
+  {
+    title: "Home and office moves",
+    body: "Packing, protection, loading, transport and carrying in or out for apartments, houses and offices.",
+  },
+  {
+    title: "Self-drive van rental",
+    body: "Clean, well-kept vans by the hour or day, with pickup and return in the Tri-City area.",
+  },
+  {
+    title: "Furniture and appliance transport",
+    body: "Single large items, appliances, boxes and small loads moved by an experienced driver.",
+  },
+  {
+    title: "Clear-outs and disposal",
+    body: "Removal of old furniture, bulky items and move-related waste, including proper disposal.",
+  },
+] as const;
+
 export default function HomePage() {
   return (
     <>
@@ -61,14 +80,14 @@ export default function HomePage() {
             </div>
 
             <p className="mt-8 text-3xl font-bold tracking-tight text-brand-500 sm:text-5xl">
-              123 456 789
+              +48 123 456 789
             </p>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-4 pb-14 pt-14 sm:px-6 sm:pt-16">
-        <div className="mx-auto max-w-3xl text-center">
+      <section className="mx-auto w-full max-w-6xl px-4 pb-10 pt-14 text-center sm:px-6 sm:pt-16">
+        <div className="mx-auto max-w-3xl">
           <h2 className="text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
             Van rental and moving services, without the paperwork.
           </h2>
@@ -77,8 +96,39 @@ export default function HomePage() {
             pricing, and no account needed.
           </p>
         </div>
+      </section>
 
-        <div id="services" className="mt-14 scroll-mt-20">
+      <section className="border-y border-slate-200 bg-white">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-brand-600">
+              What we do
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+              Moving, transport and clear-outs
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-ink-500">
+              One local team and one fleet for home and office moves, van rental, furniture
+              transport and waste removal across the Tri-City area.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {WHAT_WE_DO.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+              >
+                <h3 className="text-base font-semibold text-ink-900">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-500">{item.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-4 pb-14 pt-12 sm:px-6 sm:pt-14">
+        <div id="services" className="scroll-mt-20">
           <h2 className="text-center text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
             Choose your service
           </h2>
