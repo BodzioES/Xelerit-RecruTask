@@ -38,12 +38,26 @@ function Recenter({ latitude, longitude }: RecenterProps) {
 type Props = {
   latitude: number | null;
   longitude: number | null;
+  pendingLatitude: number | null;
+  pendingLongitude: number | null;
   onPick: (latitude: number, longitude: number) => void;
 };
 
-export default function MapPicker({ latitude, longitude, onPick }: Props) {
+export default function MapPicker({
+  latitude,
+  longitude,
+  pendingLatitude,
+  pendingLongitude,
+  onPick,
+}: Props) {
   const hasPoint = latitude !== null && longitude !== null;
-  const center: [number, number] = hasPoint ? [latitude, longitude] : SERVICE_AREA_CENTER;
+  const hasPending = pendingLatitude !== null && pendingLongitude !== null;
+  const focusLatitude = hasPending ? pendingLatitude : latitude;
+  const focusLongitude = hasPending ? pendingLongitude : longitude;
+  const center: [number, number] =
+    focusLatitude !== null && focusLongitude !== null
+      ? [focusLatitude, focusLongitude]
+      : SERVICE_AREA_CENTER;
 
   return (
     <div className="h-80 overflow-hidden rounded-xl border border-slate-200">
@@ -66,7 +80,14 @@ export default function MapPicker({ latitude, longitude, onPick }: Props) {
             pathOptions={{ color: "#1c44b8", fillColor: "#2554e0", fillOpacity: 0.9 }}
           />
         ) : null}
-        <Recenter latitude={latitude} longitude={longitude} />
+        {hasPending ? (
+          <CircleMarker
+            center={[pendingLatitude, pendingLongitude]}
+            radius={9}
+            pathOptions={{ color: "#b45309", fillColor: "#f59e0b", fillOpacity: 0.9 }}
+          />
+        ) : null}
+        <Recenter latitude={focusLatitude} longitude={focusLongitude} />
       </MapContainer>
     </div>
   );

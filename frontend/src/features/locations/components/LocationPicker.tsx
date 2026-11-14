@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 
-import { buttonClassName } from "@/components/ui/Button";
+import Button, { buttonClassName } from "@/components/ui/Button";
 import FieldShell from "@/components/ui/FieldShell";
 import { controlClassName } from "@/components/ui/controlStyles";
 import { locationKeys, reverseLocation, searchLocations, validateLocation } from "@/features/locations/api";
@@ -11,6 +11,11 @@ import { errorMessage, isUnavailable } from "@/lib/errors";
 import type { LocationSuggestion } from "@/types/api";
 
 import type { DraftLocation } from "@/features/booking/types";
+
+type PendingPoint = {
+  latitude: number;
+  longitude: number;
+};
 
 type Props = {
   label: string;
@@ -25,6 +30,7 @@ export default function LocationPicker({ label, hint, error, required, value, on
   const inputId = useId();
   const [query, setQuery] = useState(value.address);
   const [showMap, setShowMap] = useState(false);
+  const [pendingPoint, setPendingPoint] = useState<PendingPoint | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [lookupNote, setLookupNote] = useState<string | null>(null);
 
@@ -40,8 +46,9 @@ export default function LocationPicker({ label, hint, error, required, value, on
 
   function handleAddressChange(address: string): void {
     setQuery(address);
-    // Typing a new address invalidates the previously picked point: the address text
-    // must always describe the point we send to the server.
+    // Typing a new address invalidates both the picked point and the pending one:
+    // the address text must always describe the point we send to the server.
+    setPendingPoint(null);
     onChange({
       ...value,
       address,
@@ -53,6 +60,7 @@ export default function LocationPicker({ label, hint, error, required, value, on
   }
 
   function selectSuggestion(suggestion: LocationSuggestion): void {
+    setPendingPoint(null);
     onChange({
       address: suggestion.address,
       latitude: Number(suggestion.latitude),
@@ -64,28 +72,32 @@ export default function LocationPicker({ label, hint, error, required, value, on
     setLookupNote(null);
   }
 
-  async function handleMapPick(latitude: number, longitude: number): Promise<void> {
+  function handleMapPick(latitude: number, longitude: number): void {
+    // A click only marks a candidate point; the address is filled after confirmation.
+    setPendingPoint({ latitude, longitude });
+    setLookupNote(null);
+  }
+
+  async function confirmPendingPoint(): Promise<void> {
+    if (!pendingPoint) return;
+    const { latitude, longitude } = pendingPoint;
     setIsLocating(true);
     setLookupNote(null);
     try {
       const area = await validateLocation(latitude, longitude);
 
-      let address = value.address.trim();
-      let placeId = value.placeId;
+      let address: string;
+      let placeId: string | null = null;
       try {
         const reversed = await reverseLocation(latitude, longitude);
         address = reversed.address;
         placeId = reversed.place_id;
-        setQuery(address);
-      } catch (reverseError) {
-        if (isUnavailable(reverseError) && !address) {
-          // No geocoding configured: keep the point usable by describing it honestly.
-          address = `Point on the map (${latitude.toFixed(5)}, ${longitude.toFixed(5)})`;
-          setQuery(address);
-          setLookupNote(
-            "Address lookup is not configured here. The point is saved with its coordinates — replace the text with a street address if you prefer.",
-          );
-        }
+      } catch {
+        // Geocoding is unavailable: keep the point usable by describing it honestly.
+        address = `Point on the map (${latitude.toFixed(5)}, ${longitude.toFixed(5)})`;
+        setLookupNote(
+          "Address lookup is unavailable here. The point is saved with its coordinates — type the street address above if you prefer.",
+        );
       }
 
       onChange({
@@ -95,8 +107,10 @@ export default function LocationPicker({ label, hint, error, required, value, on
         placeId,
         inServiceArea: area.in_service_area,
       });
-    } catch (validateError) {
-      setLookupNote(errorMessage(validateError));
+      setQuery(address);
+      setPendingPoint(null);
+    } catch (confirmError) {
+      setLookupNote(errorMessage(confirmError));
     } finally {
       setIsLocating(false);
     }
@@ -171,7 +185,7 @@ export default function LocationPicker({ label, hint, error, required, value, on
 
         {isUnavailable(search.error) ? (
           <p className="text-xs text-ink-500">
-            Address search is not configured. Type the address and pick the exact point on the map.
+            Address search is not configured. Type the address or pick the point on the map.
           </p>
         ) : search.error ? (
           <p className="text-xs text-rose-700">{errorMessage(search.error)}</p>
@@ -182,13 +196,29 @@ export default function LocationPicker({ label, hint, error, required, value, on
             <MapPicker
               latitude={value.latitude}
               longitude={value.longitude}
-              onPick={(latitude, longitude) => {
-                void handleMapPick(latitude, longitude);
-              }}
+              pendingLatitude={pendingPoint?.latitude ?? null}
+              pendingLongitude={pendingPoint?.longitude ?? null}
+              onPick={handleMapPick}
             />
             <p className="text-xs text-ink-500">
-              Click the map to place the pin. We check every point against the service area.
+              Click the map to place the pin, then confirm it to fill the address.
             </p>
+            {pendingPoint ? (
+              <div className="flex flex-col gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+                <span>
+                  Point selected: {pendingPoint.latitude.toFixed(5)},{" "}
+                  {pendingPoint.longitude.toFixed(5)}
+                </span>
+                <Button
+                  variant="secondary"
+                  className="shrink-0"
+                  onClick={() => void confirmPendingPoint()}
+                  disabled={isLocating}
+                >
+                  {isLocating ? "Filling the address…" : "Use this point"}
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
