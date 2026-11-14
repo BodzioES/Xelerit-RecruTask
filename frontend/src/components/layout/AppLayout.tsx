@@ -31,7 +31,8 @@ function useRouteScroll(): void {
     };
     frame = window.requestAnimationFrame(scrollToTarget);
     return () => window.cancelAnimationFrame(frame);
-  }, [location.pathname, location.hash]);
+    // location.key changes on every navigation, so clicking the same anchor twice scrolls again.
+  }, [location.key, location.hash]);
 }
 
 export default function AppLayout() {
