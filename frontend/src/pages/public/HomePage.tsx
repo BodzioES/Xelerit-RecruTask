@@ -6,25 +6,6 @@ import { SERVICES } from "@/lib/services";
 const heroSecondaryButton =
   "inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 bg-white/5 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6";
 
-const WHAT_WE_DO = [
-  {
-    title: "Home and office moves",
-    body: "Packing, protection, loading, transport and carrying in or out for apartments, houses and offices.",
-  },
-  {
-    title: "Self-drive van rental",
-    body: "Clean, well-kept vans by the hour or day, with pickup and return in the Tri-City area.",
-  },
-  {
-    title: "Furniture and appliance transport",
-    body: "Single large items, appliances, boxes and small loads moved by an experienced driver.",
-  },
-  {
-    title: "Clear-outs and disposal",
-    body: "Removal of old furniture, bulky items and move-related waste, including proper disposal.",
-  },
-] as const;
-
 export default function HomePage() {
   return (
     <>
@@ -95,35 +76,6 @@ export default function HomePage() {
             Rent a van, book a driver, or hand the whole move to our crew. One local fleet, clear
             pricing, and no account needed.
           </p>
-        </div>
-      </section>
-
-      <section className="border-y border-slate-200 bg-white">
-        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-brand-600">
-              What we do
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
-              Moving, transport and clear-outs
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-ink-500">
-              One local team and one fleet for home and office moves, van rental, furniture
-              transport and waste removal across the Tri-City area.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {WHAT_WE_DO.map((item) => (
-              <article
-                key={item.title}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
-              >
-                <h3 className="text-base font-semibold text-ink-900">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-500">{item.body}</p>
-              </article>
-            ))}
-          </div>
         </div>
       </section>
 

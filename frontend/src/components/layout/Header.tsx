@@ -18,7 +18,7 @@ export default function Header() {
         </Link>
         <nav aria-label="Main" className="flex items-center gap-6 text-sm text-ink-500">
           <Link className="transition hover:text-ink-900" to="/#services">
-            Services
+            Choose a service
           </Link>
           <Link className="transition hover:text-ink-900" to="/#contact">
             Contact
