@@ -79,7 +79,7 @@ Seeded records:
 | Entity | Content |
 | --- | --- |
 | Provider account | 1 user with the `provider` role, credentials from `PROVIDER_EMAIL` / `PROVIDER_PASSWORD` |
-| Vehicles | 4 active vans (Renault Master, Fiat Ducato, Ford Transit, Iveco Daily) with illustrations in `frontend/public/vehicles/` |
+| Vehicles | 4 active vehicles (Volkswagen Crafter, Renault Master box, Iveco Daily curtain-side, Scania R-Series mega trailer) with photos in `frontend/public/` |
 | Employees | 6 people: 3 drivers and 3 movers |
 | Pricing rules | 1 rule per service type (`self_drive`, `van_driver`, `full_moving`) |
 | Bookings | 3 demo bookings in different statuses (see below) |
@@ -108,6 +108,8 @@ docker compose run --rm backend alembic current
 
 All configuration lives in `.env` (see `.env.example`). Never commit `.env` or API keys.
 The seeded provider account is created from `PROVIDER_EMAIL` / `PROVIDER_PASSWORD`.
+Docker Compose reads `.env` when a container is created, so after editing it run
+`docker compose up -d --force-recreate` to load the new values into the running stack.
 
 Geoapify provides geocoding and driving routes. `GEOAPIFY_API_KEY` is required for address
 search, reverse geocoding and route-distance pricing. When the key is empty, address search and

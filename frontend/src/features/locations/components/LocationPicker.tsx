@@ -85,32 +85,23 @@ export default function LocationPicker({ label, hint, error, required, value, on
     setLookupNote(null);
     try {
       const area = await validateLocation(latitude, longitude);
-
-      let address: string;
-      let placeId: string | null = null;
-      try {
-        const reversed = await reverseLocation(latitude, longitude);
-        address = reversed.address;
-        placeId = reversed.place_id;
-      } catch {
-        // Geocoding is unavailable: keep the point usable by describing it honestly.
-        address = `Point on the map (${latitude.toFixed(5)}, ${longitude.toFixed(5)})`;
-        setLookupNote(
-          "Address lookup is unavailable here. The point is saved with its coordinates — type the street address above if you prefer.",
-        );
-      }
+      const reversed = await reverseLocation(latitude, longitude);
 
       onChange({
-        address,
+        address: reversed.address,
         latitude,
         longitude,
-        placeId,
+        placeId: reversed.place_id,
         inServiceArea: area.in_service_area,
       });
-      setQuery(address);
+      setQuery(reversed.address);
       setPendingPoint(null);
     } catch (confirmError) {
-      setLookupNote(errorMessage(confirmError));
+      // Without a resolved address the pin must stay pending: the address text and
+      // the point sent to the server have to describe the same place.
+      setLookupNote(
+        `${errorMessage(confirmError)} Pick the address from the search list or try the point again.`,
+      );
     } finally {
       setIsLocating(false);
     }
@@ -185,7 +176,7 @@ export default function LocationPicker({ label, hint, error, required, value, on
 
         {isUnavailable(search.error) ? (
           <p className="text-xs text-ink-500">
-            Address search is not configured. Type the address or pick the point on the map.
+            Address search is not configured. Pick the point on the map or try again later.
           </p>
         ) : search.error ? (
           <p className="text-xs text-rose-700">{errorMessage(search.error)}</p>

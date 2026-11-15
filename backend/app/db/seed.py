@@ -117,106 +117,78 @@ def _seed_pricing_rules(db: Session) -> None:
     db.flush()
 
 
-VEHICLE_DIMENSIONS: dict[tuple[str, str], tuple[int, int, int]] = {
-    # (brand, model) -> (length, width, height) of the cargo area in centimetres.
-    ("Renault", "Master"): (373, 177, 188),
-    ("Fiat", "Ducato"): (312, 187, 193),
-    ("Ford", "Transit"): (349, 178, 203),
-    ("Iveco", "Daily"): (414, 174, 190),
-}
-
-VEHICLE_IMAGES: dict[tuple[str, str], str] = {
-    ("Renault", "Master"): "/semi-van.webp",
-    ("Fiat", "Ducato"): "/mini-van.webp",
-    ("Ford", "Transit"): "/big-van.webp",
-    ("Iveco", "Daily"): "/big-van.webp",
-}
-
+VEHICLE_SEEDS: list[dict[str, object]] = [
+    {
+        "brand": "Volkswagen",
+        "model": "Crafter",
+        "year": 2024,
+        "category": "Mini van",
+        "cargo_volume": Decimal("15.40"),
+        "cargo_length_cm": 430,
+        "cargo_width_cm": 183,
+        "cargo_height_cm": 196,
+        "payload": 1300,
+        "seats": 3,
+        "description": "Long-wheelbase panel van with a high roof, easy to drive in the city.",
+        "image_url": "/mini-van.webp",
+        "hourly_price": Decimal("55.00"),
+        "daily_price": Decimal("319.00"),
+    },
+    {
+        "brand": "Renault",
+        "model": "Master",
+        "year": 2023,
+        "category": "Semi van",
+        "cargo_volume": Decimal("18.90"),
+        "cargo_length_cm": 420,
+        "cargo_width_cm": 205,
+        "cargo_height_cm": 220,
+        "payload": 1500,
+        "seats": 3,
+        "description": "Master chassis with a closed box body and a side loading door.",
+        "image_url": "/semi-van.webp",
+        "hourly_price": Decimal("60.00"),
+        "daily_price": Decimal("349.00"),
+    },
+    {
+        "brand": "Iveco",
+        "model": "Daily",
+        "year": 2023,
+        "category": "Big van",
+        "cargo_volume": Decimal("23.20"),
+        "cargo_length_cm": 470,
+        "cargo_width_cm": 215,
+        "cargo_height_cm": 230,
+        "payload": 2400,
+        "seats": 3,
+        "description": "Curtain-side Daily for tall loads and bulky furniture.",
+        "image_url": "/big-van.webp",
+        "hourly_price": Decimal("75.00"),
+        "daily_price": Decimal("449.00"),
+    },
+    {
+        "brand": "Scania",
+        "model": "R-Series",
+        "year": 2022,
+        "category": "Mega van",
+        "cargo_volume": Decimal("90.00"),
+        "cargo_length_cm": 1360,
+        "cargo_width_cm": 245,
+        "cargo_height_cm": 270,
+        "payload": 24000,
+        "seats": 2,
+        "description": "Tractor unit with a mega curtain trailer for the largest moves.",
+        "image_url": "/mega-van.webp",
+        "hourly_price": Decimal("120.00"),
+        "daily_price": Decimal("699.00"),
+    },
+]
 
 def _seed_vehicles(db: Session) -> None:
     if db.scalar(select(func.count(Vehicle.id))) > 0:
-        # Backfill dimensions and images for databases seeded before they existed.
-        for vehicle in db.scalars(select(Vehicle)).all():
-            key = (vehicle.brand, vehicle.model)
-            dimensions = VEHICLE_DIMENSIONS.get(key)
-            if dimensions is not None and vehicle.cargo_length_cm is None:
-                vehicle.cargo_length_cm, vehicle.cargo_width_cm, vehicle.cargo_height_cm = (
-                    dimensions
-                )
-            image = VEHICLE_IMAGES.get(key)
-            if image is not None and vehicle.image_url != image:
-                vehicle.image_url = image
-        db.commit()
         return
 
-    db.add_all(
-        [
-            Vehicle(
-                brand="Renault",
-                model="Master",
-                year=2023,
-                category="L3H2",
-                cargo_volume=Decimal("13.00"),
-                cargo_length_cm=373,
-                cargo_width_cm=177,
-                cargo_height_cm=188,
-                payload=1400,
-                seats=3,
-                description="Long wheelbase panel van with a high roof and a rear step.",
-                image_url="/semi-van.webp",
-                hourly_price=Decimal("60.00"),
-                daily_price=Decimal("349.00"),
-            ),
-            Vehicle(
-                brand="Fiat",
-                model="Ducato",
-                year=2022,
-                category="L2H2",
-                cargo_volume=Decimal("11.50"),
-                cargo_length_cm=312,
-                cargo_width_cm=187,
-                cargo_height_cm=193,
-                payload=1250,
-                seats=3,
-                description="Comfortable mid-size van, easy to drive in the city.",
-                image_url="/mini-van.webp",
-                hourly_price=Decimal("55.00"),
-                daily_price=Decimal("319.00"),
-            ),
-            Vehicle(
-                brand="Ford",
-                model="Transit",
-                year=2024,
-                category="L3H3",
-                cargo_volume=Decimal("15.00"),
-                cargo_length_cm=349,
-                cargo_width_cm=178,
-                cargo_height_cm=203,
-                payload=1500,
-                seats=3,
-                description="Extra-high roof for tall loads and bulky furniture.",
-                image_url="/big-van.webp",
-                hourly_price=Decimal("65.00"),
-                daily_price=Decimal("379.00"),
-            ),
-            Vehicle(
-                brand="Iveco",
-                model="Daily",
-                year=2021,
-                category="L4H2",
-                cargo_volume=Decimal("18.00"),
-                cargo_length_cm=414,
-                cargo_width_cm=174,
-                cargo_height_cm=190,
-                payload=1800,
-                seats=3,
-                description="The largest van in the fleet, ideal for full moves.",
-                image_url="/big-van.webp",
-                hourly_price=Decimal("70.00"),
-                daily_price=Decimal("419.00"),
-            ),
-        ]
-    )
+    db.add_all([Vehicle(**payload) for payload in VEHICLE_SEEDS])
     db.flush()
     logger.info("Seeded demo vehicles")
 
@@ -357,7 +329,7 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
         customer_last_name="Nowak",
         customer_email="anna.nowak@example.com",
         customer_phone="+48 502 345 678",
-        vehicle_id=_get_vehicle(db, "Ducato").id,
+        vehicle_id=_get_vehicle(db, "Crafter").id,
         service_type=ServiceType.SELF_DRIVE,
         start_datetime=rental_start,
         end_datetime=rental_start + timedelta(days=2),
@@ -417,7 +389,7 @@ def _seed_demo_bookings(db: Session, provider: User) -> None:
         customer_last_name="Wiśniewski",
         customer_email="marek.wisniewski@example.com",
         customer_phone="+48 503 456 789",
-        vehicle_id=_get_vehicle(db, "Transit").id,
+        vehicle_id=_get_vehicle(db, "Daily").id,
         service_type=ServiceType.VAN_DRIVER,
         start_datetime=transport_start,
         end_datetime=transport_end,

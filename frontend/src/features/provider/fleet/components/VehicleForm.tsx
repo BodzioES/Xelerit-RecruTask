@@ -18,6 +18,7 @@ const IMAGE_PICKS = [
   { label: "Mini van", value: "/mini-van.webp" },
   { label: "Semi van", value: "/semi-van.webp" },
   { label: "Big van", value: "/big-van.webp" },
+  { label: "Mega van", value: "/mega-van.webp" },
 ] as const;
 
 function asNumber(value: string): number | null {
