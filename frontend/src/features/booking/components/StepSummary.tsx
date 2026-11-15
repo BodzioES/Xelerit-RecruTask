@@ -149,8 +149,12 @@ export default function StepSummary({
             required
           />
           <span>
-            I confirm the details above are correct. I understand that the booking is created with
-            the <strong className="font-semibold">Pending review</strong> status and the Provider
+            I confirm the details above are correct
+            <span aria-hidden="true" className="ml-0.5 font-semibold text-rose-600">
+              *
+            </span>
+            . I understand that the booking is created with the{" "}
+            <strong className="font-semibold">Pending review</strong> status and the Provider
             confirms it before the service starts. I can cancel it from the booking page until the
             service begins.
           </span>
