@@ -155,6 +155,16 @@ export default function BookingStatusPage() {
           ) : null}
         </div>
       </div>
+
+      <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-6">
+        <Link
+          to="/"
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-ink-700 transition hover:border-brand-200 hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+        >
+          Back to home
+        </Link>
+        <p className="text-sm text-ink-500">Your booking stays available under this link.</p>
+      </div>
     </div>
   );
 }
