@@ -12,12 +12,14 @@
 
   --color-ink-900: #172033;
   --color-ink-700: #33405c;
-  --color-ink-500: #5c6a85;
+  --color-ink-500: #4b5872;
 }
 
 @layer base {
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
+    /* Inter is slightly thin on Windows; a touch more weight reads better. */
+    font-weight: 450;
   }
 
   ::selection {

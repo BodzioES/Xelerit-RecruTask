@@ -148,7 +148,7 @@ The seeded Provider logs in with `PROVIDER_EMAIL` / `PROVIDER_PASSWORD`:
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "provider@moveit.local", "password": "provider123"}'
+  -d '{"email": "provider@janusztrans.local", "password": "provider123"}'
 ```
 
 The response contains a bearer token valid for `ACCESS_TOKEN_EXPIRE_MINUTES`. Send it as
@@ -418,7 +418,7 @@ Provider has prepared it. A guest can cancel a booking while it is `pending`, `c
 
 The Provider panel lives under `/provider/*` with its own layout, auth guard and lazy-loaded
 chunks; feature code stays in `features/provider/*`. The login token is stored in
-`sessionStorage` (`moveit.provider.token`) and attached to every request as a bearer header. A
+`sessionStorage` (`janusztrans.provider.token`) and attached to every request as a bearer header. A
 401 response clears the session and returns to the sign-in page. The booking detail reuses the
 customer-side presentation components with provider-facing wording, so statuses, timeline and
 handover are rendered from one set of components on both sides.

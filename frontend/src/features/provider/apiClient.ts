@@ -3,7 +3,7 @@ import { ApiError, apiDelete, apiGet, apiPatch, apiPost } from "@/services/apiCl
 import { clearProviderToken, readProviderToken } from "./auth/session";
 
 /** Fired when the API rejects the stored token, so the guard can ask for a login. */
-export const PROVIDER_SESSION_EXPIRED_EVENT = "moveit:provider-session-expired";
+export const PROVIDER_SESSION_EXPIRED_EVENT = "janusztrans:provider-session-expired";
 
 function authHeaders(): Record<string, string> {
   const token = readProviderToken();

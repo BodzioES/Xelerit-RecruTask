@@ -1,12 +1,12 @@
-name: moveit
+name: janusztrans
 
 services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-moveit}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-moveit}
-      POSTGRES_DB: ${POSTGRES_DB:-moveit}
+      POSTGRES_USER: ${POSTGRES_USER:-janusztrans}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-janusztrans}
+      POSTGRES_DB: ${POSTGRES_DB:-janusztrans}
     ports:
       - "${POSTGRES_HOST_PORT:-5433}:5432"
     volumes:
@@ -15,7 +15,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-moveit} -d ${POSTGRES_DB:-moveit}",
+          "pg_isready -U ${POSTGRES_USER:-janusztrans} -d ${POSTGRES_DB:-janusztrans}",
         ]
       interval: 5s
       timeout: 5s
@@ -25,11 +25,11 @@ services:
     build: ./backend
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-moveit}:${POSTGRES_PASSWORD:-moveit}@db:5432/${POSTGRES_DB:-moveit}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-janusztrans}:${POSTGRES_PASSWORD:-janusztrans}@db:5432/${POSTGRES_DB:-janusztrans}
       JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-before-deploying-32chars}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-480}
-      PROVIDER_EMAIL: ${PROVIDER_EMAIL:-provider@moveit.local}
+      PROVIDER_EMAIL: ${PROVIDER_EMAIL:-provider@janusztrans.local}
       PROVIDER_PASSWORD: ${PROVIDER_PASSWORD:-provider123}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
       GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY:-}

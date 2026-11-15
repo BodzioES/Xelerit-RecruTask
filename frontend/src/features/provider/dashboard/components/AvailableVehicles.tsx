@@ -13,7 +13,7 @@ export default function AvailableVehicles({ vehicles }: Props) {
   return (
     <Panel
       title="Available vehicles"
-      description="Ready to rent in the next hour."
+      description="Free for the next hour. Vans booked or blocked for that hour are not listed."
       actions={
         <Link
           to="/provider/vehicles"

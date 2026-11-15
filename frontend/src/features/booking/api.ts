@@ -87,7 +87,7 @@ export function fetchHandover(bookingId: string, token: string): Promise<Handove
 }
 
 export function bookingTokenStorageKey(bookingId: string): string {
-  return `moveit.booking.${bookingId}.token`;
+  return `janusztrans.booking.${bookingId}.token`;
 }
 
 export function rememberBookingToken(bookingId: string, token: string): void {

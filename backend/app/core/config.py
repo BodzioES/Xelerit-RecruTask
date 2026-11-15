@@ -18,13 +18,13 @@ class Settings(BaseSettings):
     environment: str = "development"
     api_v1_prefix: str = "/api/v1"
 
-    database_url: str = "postgresql+psycopg://moveit:moveit@localhost:5433/moveit"
+    database_url: str = "postgresql+psycopg://janusztrans:janusztrans@localhost:5433/janusztrans"
 
     jwt_secret: str = "dev-only-secret-change-me-before-deploying-32chars"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 480
 
-    provider_email: str = "provider@moveit.local"
+    provider_email: str = "provider@janusztrans.local"
     provider_password: str = "provider123"
 
     cors_origins: str = "http://localhost:8080,http://localhost:5173"

@@ -180,4 +180,7 @@ def test_seeded_booking_windows_are_consistent() -> None:
             for assignment in booking.assignments:
                 assert assignment.start_datetime == booking.start_datetime
                 assert assignment.end_datetime == booking.end_datetime
-                assert assignment.is_released is False
+                # Assignments are released only once the booking is closed, so the
+                # check also holds on a database that already has a history.
+                released = assignment.is_released
+                assert released is (booking.status in {BookingStatus.CANCELLED, BookingStatus.REJECTED})

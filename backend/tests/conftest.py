@@ -17,7 +17,7 @@ from app.modules.users.models import User
 from app.modules.vehicles.models import Vehicle
 from tests.pricing_helpers import PRICING_FIELDS, RULE_VALUES
 
-PROVIDER_EMAIL = "pytest-provider@moveit.local"
+PROVIDER_EMAIL = "pytest-provider@janusztrans.local"
 PROVIDER_PASSWORD = "pytest-provider-password"
 
 

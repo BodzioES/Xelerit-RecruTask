@@ -4,7 +4,7 @@ Read [`AGENTS.md`](../../AGENTS.md) first. This guide covers infrastructure and 
 
 ## 1. Topology
 
-One Compose project (`moveit`) with three services and one target-only job:
+One Compose project (`janusztrans`) with three services and one target-only job:
 
 | Service | Image | Host port | Purpose |
 | --- | --- | --- | --- |

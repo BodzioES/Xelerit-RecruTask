@@ -105,7 +105,7 @@ export default function PricingRuleForm({ rule }: Props) {
   }
 
   return (
-    <Panel title={`${service.name} pricing`} description={service.summary}>
+    <Panel title={`${service.name} pricing`}>
       <form
         noValidate
         onSubmit={(event) => {

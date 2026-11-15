@@ -1,4 +1,4 @@
-const TOKEN_KEY = "moveit.provider.token";
+const TOKEN_KEY = "janusztrans.provider.token";
 
 /** sessionStorage keeps the provider token out of the shared customer client. */
 export function readProviderToken(): string | null {

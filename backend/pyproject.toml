@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "moveit-backend"
+name = "janusztrans-backend"
 version = "0.1.0"
 description = "JanuszTrans API — van rental, transport and moving services MVP"
 requires-python = ">=3.12"

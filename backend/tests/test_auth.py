@@ -35,7 +35,7 @@ def test_login_rejects_wrong_password(
 def test_login_rejects_unknown_email(client: TestClient) -> None:
     response = client.post(
         "/api/v1/auth/login",
-        json={"email": "nobody@moveit.local", "password": "whatever"},
+        json={"email": "nobody@janusztrans.local", "password": "whatever"},
     )
 
     assert response.status_code == 401
