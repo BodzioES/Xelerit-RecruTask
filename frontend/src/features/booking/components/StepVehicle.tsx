@@ -96,7 +96,11 @@ export default function StepVehicle({ draft, onChange, onNext, onBack }: WizardS
     <form noValidate onSubmit={handleSubmit} className="space-y-6">
       <Panel
         title="Choose your van"
-        description="Every van in the fleet is listed. Booked ones are marked and cannot be picked."
+        description={
+          selfDrive
+            ? "Pick the van you want to drive. Booked vans are marked and cannot be picked."
+            : "Pick a van, or leave none selected and we assign the best free one. Click a selected van again to clear it."
+        }
       >
         <label className="mb-4 flex cursor-pointer items-center gap-2 text-sm font-medium text-ink-700">
           <input
@@ -107,33 +111,6 @@ export default function StepVehicle({ draft, onChange, onNext, onBack }: WizardS
           />
           Show only vans available for my dates
         </label>
-
-        {!selfDrive ? (
-          <label
-            className={[
-              "mb-4 flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition",
-              "focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-600",
-              draft.vehicleId === null
-                ? "border-brand-500 bg-brand-50 ring-1 ring-brand-500"
-                : "border-slate-200 bg-white hover:border-brand-200",
-            ].join(" ")}
-          >
-            <input
-              type="radio"
-              name="vehicle"
-              className="mt-1 size-4 accent-brand-600"
-              checked={draft.vehicleId === null}
-              onChange={() => onChange({ vehicleId: null, vehicleLabel: null })}
-            />
-            <span>
-              <span className="block font-semibold text-ink-900">Any available van</span>
-              <span className="mt-0.5 block text-sm text-ink-500">
-                We assign the best free van when the booking is created. Or pick a specific van
-                below.
-              </span>
-            </span>
-          </label>
-        ) : null}
 
         {vehicles.isPending || fleet.isPending ? (
           <LoadingState label="Loading the fleet" rows={2} />
@@ -167,6 +144,9 @@ export default function StepVehicle({ draft, onChange, onNext, onBack }: WizardS
                     vehicleId: vehicle.id,
                     vehicleLabel: `${vehicle.brand} ${vehicle.model}`,
                   })
+                }
+                onClear={
+                  selfDrive ? undefined : () => onChange({ vehicleId: null, vehicleLabel: null })
                 }
               />
             ))}

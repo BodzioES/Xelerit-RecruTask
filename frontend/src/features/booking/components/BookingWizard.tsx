@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "@/components/ui/Button";
+import AssistantTip from "@/features/assistant/components/AssistantTip";
 import { errorMessage } from "@/lib/errors";
 import { serviceByType, type ServiceMeta, type ServiceSlug } from "@/lib/services";
 import type { BookingCreated } from "@/types/api";
@@ -149,6 +150,15 @@ export default function BookingWizard({
         <p className="text-sm font-medium text-ink-900">{service.summary}</p>
         <p className="mt-1 text-sm leading-relaxed text-ink-500">{service.pricing}</p>
       </div>
+
+      {service.isMoving ? (
+        <div className="mt-3">
+          <AssistantTip>
+            Not sure how many movers or what details to enter? On the Job details step, describe
+            your move in your own words and our AI assistant fills in the form for you.
+          </AssistantTip>
+        </div>
+      ) : null}
 
       <div className="mt-8">
         <StepIndicator steps={steps} currentIndex={stepIndex} />

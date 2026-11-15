@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { buttonClassName } from "@/components/ui/Button";
+import AssistantTip from "@/features/assistant/components/AssistantTip";
 import FleetSection from "@/features/landing/components/FleetSection";
 import HowItWorksSection from "@/features/landing/components/HowItWorksSection";
 import PricingSection from "@/features/landing/components/PricingSection";
@@ -121,6 +122,13 @@ export default function HomePage() {
                 </Link>
               </article>
             ))}
+          </div>
+
+          <div className="mx-auto mt-8 max-w-3xl">
+            <AssistantTip>
+              New: booking Van + Driver or Full Moving? Describe your move in your own words and
+              our AI assistant fills in the property, access, item list and crew size for you.
+            </AssistantTip>
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-center text-sm text-ink-500">

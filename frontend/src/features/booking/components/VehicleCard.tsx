@@ -6,9 +6,11 @@ type Props = {
   selected: boolean;
   available: boolean;
   onSelect: () => void;
+  /** When set, clicking the already selected van clears the choice. */
+  onClear?: () => void;
 };
 
-export default function VehicleCard({ vehicle, selected, available, onSelect }: Props) {
+export default function VehicleCard({ vehicle, selected, available, onSelect, onClear }: Props) {
   return (
     <label
       className={[
@@ -29,6 +31,8 @@ export default function VehicleCard({ vehicle, selected, available, onSelect }: 
         checked={selected}
         disabled={!available}
         onChange={onSelect}
+        // A checked radio fires no change event, so a second click is handled here.
+        onClick={selected ? onClear : undefined}
       />
       <div className="flex h-36 items-center justify-center bg-slate-50">
         {vehicle.image_url ? (

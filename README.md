@@ -1,65 +1,67 @@
 # JanuszTrans
 
-JanuszTrans is a single-company web platform for van rental, transport with a driver and full
-moving services in Trójmiasto (Gdańsk, Gdynia, Sopot) and up to ~30 km around it.
+A booking platform for one moving and van company in the Tri-City area (Gdańsk, Gdynia, Sopot,
+up to ~30 km around). Customers book one of three services without an account, and the company
+runs everything from a Provider panel. Built as a full-stack MVP for a recruitment task.
 
-The project is an MVP built as a full-stack recruitment task. The priority is a correct,
-end-to-end booking process — not a feature-rich commercial system.
+## Features
 
-## Status
+**For customers**
 
-| Milestone | Scope | Status |
-| --- | --- | --- |
-| 0 | Repository skeleton, tooling, environment template | Done |
-| 1 | Docker Compose, FastAPI + PostgreSQL + React pipeline | Done |
-| 2 | Database models, Alembic migrations, demo seed | Done |
-| 3 | Provider auth, vehicle and employee management | Done |
-| 4 | Availability engine (vehicles, employees, buffers, concurrency) | Done |
-| 5 | Pricing engine | Done |
-| 6 | Locations, map integration, service-area validation | Done |
-| 7 | Bookings, guest access, statuses, handover | Done |
-| 8–10 | Frontend: landing page, booking wizard, confirmation | Done |
-| 11 | Provider panel | Done |
-| 12 | Tests, documentation, demo assets | In progress |
+- Three services: **Self Drive** (rent a van), **Van + Driver** (transport) and **Full Moving**
+  (van, driver and a crew of movers).
+- Step-by-step booking wizard: addresses by search or a click on the map, date, van, job details,
+  crew, a live quote with every price line, contact details and a summary.
+- Only free vans can be picked; booked ones are marked, and a filter hides them.
+- **AI move assistant:** describe the move in your own words and the form fills itself in
+  (see [below](#ai-move-assistant)).
+- A private booking page (link with a token) with the status timeline, cancellation and, for
+  Self Drive, the lockbox code once the van is ready.
+- Landing page with the fleet and the current rates, both loaded from the API.
 
-## Stack
+**For the Provider (company)**
 
-- **Backend:** Python 3.12, FastAPI, SQLAlchemy 2.0, Pydantic, Alembic, PostgreSQL 17
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router,
-  React Hook Form, Zod, Leaflet
-- **Maps:** Leaflet, React Leaflet, OpenStreetMap, Geoapify (geocoding and routing)
-- **AI:** Groq (free tier) — `openai/gpt-oss-120b` for the move assistant and Llama Prompt Guard 2
-  for prompt-attack detection
-- **Infrastructure:** Docker, Docker Compose, nginx
+- Dashboard with new, overdue, upcoming and active bookings and the vans free right now.
+- Status changes with a history, rescheduling (the price is recalculated), resource reassignment
+  and phone bookings entered with the same wizard.
+- Lockbox handover for Self Drive: an encrypted 6-digit code and pickup instructions.
+- Fleet, employee and downtime management. A van or employee with open bookings cannot be
+  deactivated.
+- Editable pricing rules for every service.
 
-### Why PostgreSQL instead of SQLite
+## Tech stack
 
-The task suggests an in-memory database or SQLite to keep the setup simple. JanuszTrans uses
-PostgreSQL on purpose, because the core promise of the app is that a van or an employee can never
-be booked twice for overlapping times:
+| Area | Technologies |
+| --- | --- |
+| Backend | Python 3.12, FastAPI, SQLAlchemy 2.0, Pydantic, Alembic, PostgreSQL 17 |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router, Zod |
+| Maps | Leaflet, OpenStreetMap, Geoapify (geocoding and driving routes) |
+| AI | Groq (free tier): `openai/gpt-oss-120b` and Llama Prompt Guard 2 |
+| Infrastructure | Docker Compose, nginx |
 
-- `EXCLUDE USING GIST` constraints on time ranges reject overlapping bookings and downtime blocks
-  inside the database, even when two requests arrive at the same moment. SQLite has no range
-  types or exclusion constraints, so the same guarantee would need application-level locking.
-- Booking numbers (`MV-<year>-<6 digits>`) come from a PostgreSQL sequence, and timestamps are
-  stored as `timestamptz`, which keeps every domain time timezone-aware.
+The backend is a modular monolith (`backend/app/modules/*`: bookings, availability, pricing,
+locations, handover, assistant…). The frontend is a React SPA (`frontend/src`) served by nginx,
+which also proxies `/api` to the backend.
 
-The setup stays as simple as the task asks for: the database runs as a container in the same
-Compose stack, migrations and demo data are applied automatically on start, and nothing has to
-be installed or configured by hand. `docker compose up --build` is the only command needed.
+**Interesting solutions**
 
-## Repository layout
+- **No double bookings, even under concurrency.** Availability is checked in the booking
+  transaction, and PostgreSQL `EXCLUDE USING GIST` constraints on time ranges are the final guard.
+  A 60-minute buffer separates two jobs of the same van or employee.
+- **The server owns every price.** Quotes are calculated on the backend with `Decimal`, and the
+  booking recalculates the price inside its transaction. The frontend only displays the breakdown.
+- **Secure guest access.** The booking link token is shown once and stored only as a SHA-256 hash.
+  Lockbox codes are encrypted with AES-256-GCM, and the guest sees them only when the van is ready.
+- **Controlled status flow.** Every transition is validated and recorded with its author.
 
-```
-backend/    FastAPI application (modular monolith)
-frontend/   React SPA served by nginx
-docker-compose.yml
-.env.example
-```
+**Why PostgreSQL instead of SQLite?** The task suggests SQLite or an in-memory database to keep the
+setup simple. The core promise of this app, never booking one van twice, relies on PostgreSQL range
+exclusion constraints, which SQLite does not have. The setup stays one command: the database runs
+in the same Compose stack, and migrations and demo data are applied automatically.
 
 ## Getting started
 
-Requirements: Docker with Docker Compose. Nothing else has to be installed locally.
+Requirements: **Docker with Docker Compose**. Nothing else has to be installed.
 
 1. Copy the environment template:
 
@@ -67,516 +69,129 @@ Requirements: Docker with Docker Compose. Nothing else has to be installed local
    cp .env.example .env
    ```
 
-2. Add a free Geoapify API key. The booking wizard needs it for address search and for
-   picking a point on the map, so without it a booking cannot be completed.
+2. Add the free API keys to `.env`:
 
-   1. Create a free account at https://myprojects.geoapify.com/ (no credit card required).
-   2. Create a project; an API key is generated for it.
-   3. Paste the key into `.env`:
+   | Key | Where to get it | Needed for |
+   | --- | --- | --- |
+   | `GEOAPIFY_API_KEY` | https://myprojects.geoapify.com/ (free, no card) | **Required** for address search and the map, so without it a booking cannot be completed |
+   | `GROQ_API_KEY` | https://console.groq.com/keys (free, no card) | Optional: the AI assistant. Without it the assistant is hidden |
 
-      ```bash
-      GEOAPIFY_API_KEY=your-key-here
-      ```
-
-   The free tier is far above what a local demo needs. The Provider panel, the API and the
-   pricing engine also work without the key.
-
-   Optional: for the AI move assistant, create a free key at https://console.groq.com/keys (no
-   credit card required) and add it as `GROQ_API_KEY=your-key-here`. Without it the assistant is
-   simply hidden.
-
-3. Start the whole stack:
+3. Start the stack (migrations and demo data run automatically):
 
    ```bash
    docker compose up --build
    ```
 
-4. Open:
+4. Open the app:
 
    | Service | URL |
    | --- | --- |
    | Frontend | http://localhost:8080 |
-   | API | http://localhost:8000/api/v1 |
-   | Swagger UI | http://localhost:8000/docs (also http://localhost:8080/docs) |
-   | PostgreSQL | `localhost:5433` (host port, configurable) |
+   | Provider panel | http://localhost:8080/provider |
+   | Swagger UI | http://localhost:8000/docs |
 
-5. Stop the stack:
+After editing `.env` later, run `docker compose up -d --force-recreate`. Stop with
+`docker compose down`.
 
-   ```bash
-   docker compose down
-   ```
+### Demo data
 
-## Demo data
-
-The backend entrypoint runs `alembic upgrade head` and then an idempotent seed
-(`python -m app.db.seed`) on every start. The seed only creates records that are missing, so
-restarting the stack never duplicates data.
-
-Seeded records:
-
-| Entity | Content |
-| --- | --- |
-| Provider account | 1 user with the `provider` role, credentials from `PROVIDER_EMAIL` / `PROVIDER_PASSWORD` |
-| Vehicles | 4 active vehicles (Volkswagen Crafter, Renault Master box, Iveco Daily curtain-side, Scania R-Series mega trailer) with photos in `frontend/public/` |
-| Employees | 6 people: 3 drivers and 3 movers |
-| Pricing rules | 1 rule per service type (`self_drive`, `van_driver`, `full_moving`) |
-| Bookings | 3 demo bookings in different statuses (see below) |
-
-| Booking number | Service | Status | Notes |
-| --- | --- | --- | --- |
-| `MV-2026-000001` | Full moving | `pending` | Loading/unloading addresses, item list, floor and lift details, 3 assigned employees |
-| `MV-2026-000002` | Self-drive rental | `confirmed` | Pickup/return locations and handover instructions; the lockbox code can be generated by the Provider |
-| `MV-2026-000003` | Van + driver | `completed` | Full status history and one assigned driver |
-
-Booking numbers come from the PostgreSQL sequence `booking_number_seq` in the
-`MV-<year>-<6 digits>` format.
-
-Useful maintenance commands:
-
-```bash
-# Re-run the seed manually (safe to repeat)
-docker compose run --rm backend python -m app.db.seed
-
-# Apply migrations / inspect the current revision
-docker compose run --rm backend alembic upgrade head
-docker compose run --rm backend alembic current
-```
-
-## Environment
-
-All configuration lives in `.env` (see `.env.example`). Never commit `.env` or API keys.
-The seeded provider account is created from `PROVIDER_EMAIL` / `PROVIDER_PASSWORD`.
-Docker Compose reads `.env` when a container is created, so after editing it run
-`docker compose up -d --force-recreate` to load the new values into the running stack.
-
-Geoapify provides geocoding and driving routes. `GEOAPIFY_API_KEY` is required for address
-search, reverse geocoding and route-distance pricing. When the key is empty, address search and
-reverse geocoding return `503`, `/locations/validate` and pricing keep working, and the billable
-distance falls back to a straight-line haversine estimate. Quotes expose `distance_source` as
-`routing`, `haversine` or `none` so the fallback is visible to the client.
-
-Lockbox codes are encrypted with `HANDOVER_ENCRYPTION_KEY`. Use a long random value and keep
-it stable: changing the key makes previously generated codes unreadable. The value is never
-committed; `.env.example` only contains a placeholder.
+The idempotent seed creates the Provider account (`PROVIDER_EMAIL` / `PROVIDER_PASSWORD`, by
+default `provider@janusztrans.local` / `provider123`), 4 vans, 6 employees (3 drivers, 3 movers),
+the pricing rules and 3 bookings: `MV-2026-000001` (Full Moving, pending), `MV-2026-000002`
+(Self Drive, confirmed) and `MV-2026-000003` (Van + Driver, completed).
 
 ## Testing
 
 ```bash
-# Backend: lint, format check and the test suite
-docker compose run --rm backend ruff check .
-docker compose run --rm backend ruff format --check .
-docker compose run --rm backend pytest
-
-# Frontend: TypeScript check and the production build
-docker compose build frontend
-
-# Frontend: unit tests (Vitest), from the frontend/ directory with Node 22
-npm ci && npm test
+docker compose run --rm backend ruff check .           # lint
+docker compose run --rm backend ruff format --check .  # formatting
+docker compose run --rm backend pytest                 # backend tests
+docker compose build frontend                          # TypeScript check + production build
+cd frontend && npm ci && npm test                      # frontend unit tests (Node 22)
 ```
 
-## API documentation
+## API
 
-FastAPI exposes OpenAPI 3.1 automatically:
+The full interactive documentation is in Swagger (`/docs`) and ReDoc (`/redoc`). Provider endpoints
+need `Authorization: Bearer <token>` from `POST /api/v1/auth/login`, and guest endpoints use the
+booking token (`X-Booking-Token` header or `?token=`). Main endpoints, all under `/api/v1`:
 
-- Swagger UI: `/docs`
-- ReDoc: `/redoc`
-- Schema: `/openapi.json`
-
-### Provider authentication
-
-The seeded Provider logs in with `PROVIDER_EMAIL` / `PROVIDER_PASSWORD`:
-
-```bash
-curl -X POST http://localhost:8000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "provider@janusztrans.local", "password": "provider123"}'
-```
-
-The response contains a bearer token valid for `ACCESS_TOKEN_EXPIRE_MINUTES`. Send it as
-`Authorization: Bearer <token>` to every `/api/v1/provider/...` endpoint. The token is
-validated against the `provider` role; guest and customer routes stay public.
-
-| Method | Endpoint | Auth | Purpose |
-| --- | --- | --- | --- |
-| POST | `/api/v1/auth/login` | — | Obtain a Provider token |
-| GET | `/api/v1/auth/me` | Provider | Current Provider profile |
-| GET | `/api/v1/vehicles` | — | Active vehicles (public catalog) |
-| GET | `/api/v1/vehicles/{id}` | — | Active vehicle details |
-| GET | `/api/v1/provider/vehicles` | Provider | Full fleet, including inactive |
-| POST | `/api/v1/provider/vehicles` | Provider | Add a vehicle |
-| PATCH | `/api/v1/provider/vehicles/{id}` | Provider | Edit or reactivate a vehicle |
-| DELETE | `/api/v1/provider/vehicles/{id}` | Provider | Deactivate a vehicle (`409` while it has open bookings) |
-| GET | `/api/v1/provider/employees` | Provider | List employees, including inactive |
-| POST | `/api/v1/provider/employees` | Provider | Add an employee |
-| PATCH | `/api/v1/provider/employees/{id}` | Provider | Edit, reactivate or change a role |
-| DELETE | `/api/v1/provider/employees/{id}` | Provider | Deactivate an employee (`409` while assigned to open bookings) |
-| GET | `/api/v1/availability/vehicles` | — | Vehicles free for a time window |
-| GET | `/api/v1/availability/employees` | — | Employees free for a time window |
-| POST | `/api/v1/availability/check` | — | Check one vehicle and a set of employees |
-| GET | `/api/v1/provider/employees/availability` | Provider | Same employee check for the Provider panel |
-| GET | `/api/v1/provider/vehicles/{id}/unavailability` | Provider | Vehicle downtime periods |
-| POST | `/api/v1/provider/vehicles/{id}/unavailability` | Provider | Block a vehicle (service, repair) |
-| DELETE | `/api/v1/provider/vehicles/{id}/unavailability/{blockId}` | Provider | Remove a downtime period |
-| GET | `/api/v1/provider/employees/{id}/unavailability` | Provider | Employee unavailability periods |
-| POST | `/api/v1/provider/employees/{id}/unavailability` | Provider | Block an employee (leave, training) |
-| DELETE | `/api/v1/provider/employees/{id}/unavailability/{blockId}` | Provider | Remove an employee block |
-| GET | `/api/v1/pricing/rules` | — | Current rates, shown on the landing page (read-only) |
-| GET | `/api/v1/assistant/status` | — | Whether the AI move assistant is configured |
-| POST | `/api/v1/assistant/move-plan` | — | Turn a free-text move description into suggested booking fields |
-| POST | `/api/v1/pricing/quote` | — | Server-side price quote with a line-item breakdown |
-| GET | `/api/v1/provider/pricing-rules` | Provider | Read the rates used for every service |
-| PATCH | `/api/v1/provider/pricing-rules/{service_type}` | Provider | Edit the rates for one service |
-| GET | `/api/v1/locations/search?q=` | — | Address suggestions from Geoapify |
-| GET | `/api/v1/locations/reverse?lat=&lng=` | — | Address for a map point |
-| POST | `/api/v1/locations/validate` | — | Check whether a point is inside the service area |
-| POST | `/api/v1/bookings` | — | Create a guest booking |
-| GET | `/api/v1/bookings/{id}` | Guest token or Provider | Booking details |
-| PATCH | `/api/v1/bookings/{id}/cancel` | Guest token | Cancel a booking before it starts |
-| GET | `/api/v1/provider/dashboard` | Provider | New, overdue, upcoming and active bookings plus available vehicles |
-| GET | `/api/v1/provider/bookings` | Provider | Paginated booking list with status, service and assigned-employee filters |
-| POST | `/api/v1/provider/bookings` | Provider | Enter a phone booking; it starts `confirmed` and returns the guest token |
-| PATCH | `/api/v1/provider/bookings/{id}/status` | Provider | Controlled status transition |
-| PATCH | `/api/v1/provider/bookings/{id}/schedule` | Provider | Move a booking to a new window and recalculate its price |
-| POST | `/api/v1/provider/bookings/{id}/assign-resources` | Provider | Reassign the vehicle and staff |
-| POST | `/api/v1/bookings/{id}/handover` | Provider | Generate a lockbox code and set handover instructions |
-| GET | `/api/v1/bookings/{id}/handover` | Guest token or Provider | Handover details; the guest sees them only when prepared |
-
-### Availability rules
-
-- Time windows are half-open (`start` inclusive, `end` exclusive) and must include a
-  timezone offset. Naive datetimes and inverted windows return `422`.
-- A booking occupies its resource for the whole window. Cancelled and rejected bookings
-  release it again; other statuses keep it.
-- `RESOURCE_BUFFER_MINUTES` (default `60`) is the required gap between two bookings of the
-  same vehicle or employee. Downtime blocks are exact and do not add the buffer.
-- Availability is checked at search time and must be checked again inside the booking
-  transaction. PostgreSQL `EXCLUDE USING GIST` constraints on `bookings`,
-  `booking_employees`, `vehicle_unavailability` and `employee_unavailability` are the final
-  guard, so two concurrent requests can never double-book the same resource.
-- Only active vehicles and employees are returned by the public availability endpoints.
-  Capacity filters (`min_cargo_volume`, `min_payload`, `min_seats`) are optional.
-- Vehicles also carry optional interior dimensions (`cargo_length_cm`, `cargo_width_cm`,
-  `cargo_height_cm`). They are shown on the vehicle card and are informative only — they are
-  not used for filtering or pricing.
-
-Example:
-
-```bash
-curl "http://localhost:8000/api/v1/availability/vehicles?\
-start_datetime=2027-05-10T10:00:00Z&end_datetime=2027-05-10T14:00:00Z&min_cargo_volume=11"
-```
-
-```bash
-curl -X POST http://localhost:8000/api/v1/availability/check \
-  -H "Content-Type: application/json" \
-  -d '{
-    "start_datetime": "2027-05-10T10:00:00Z",
-    "end_datetime": "2027-05-10T14:00:00Z",
-    "vehicle_id": "<vehicle-id>",
-    "employee_ids": ["<employee-id>"]
-  }'
-```
-
-### Pricing rules
-
-`POST /api/v1/pricing/quote` returns the total and every component that produced it. The
-frontend renders the result and never calculates a final price itself. Quotes are stateless;
-booking creation recalculates the price from the same rules inside its transaction.
-
-| Field | Applies to | Meaning |
-| --- | --- | --- |
-| `service_type` | all | `self_drive`, `van_driver` or `full_moving` |
-| `start_datetime`, `end_datetime` | all | Requested window; duration is rounded up to whole hours |
-| `vehicle_id` | optional | Vehicle-specific hourly/daily rates for Self Drive |
-| `origin`, `destination` | optional | Coordinates used to derive the billable distance |
-| `helpers` | Full Moving | Number of movers (maximum from `MAX_MOVING_HELPERS`) |
-| `floor`, `has_elevator` | Full Moving | Floor surcharge and no-elevator surcharge |
-| `additional_service` | all | Adds the flat additional-service price from the rule |
-
-- The rule for each service type lives in `pricing_rules` and is seeded with demo values. The
-  Provider can read and edit every rule in the panel (`/provider/pricing`) or through the API.
-  `min_duration_hours` is a billing minimum: shorter requests are charged for the minimum.
-- Self Drive uses the selected vehicle's hourly/daily rates when available. Rentals under
-  24 hours are billed hourly; longer rentals use full days plus leftover hours, capped so
-  leftover hours never cost more than another full day. Route distance is returned but never
-  charged, because a different return point is not an automatic surcharge.
-- Van + Driver bills the base fee, billable hours and route distance.
-- Full Moving bills the same components plus helpers, floor surcharges, the no-elevator
-  surcharge and an optional additional service.
-- Distance is calculated by the backend from coordinates through the Geoapify Routing API. If
-  the key is missing or the provider fails, the backend falls back to a straight-line haversine
-  estimate and reports it in `distance_source`; the final driving distance may be longer. The
-  client never sends a billable distance.
-- `floor`, `has_elevator` and `helpers` are rejected outside Full Moving. For apartments,
-  offices and retail units `floor` is required; for a floor above ground, `has_elevator` is also
-  required. `origin` and `destination` must be sent together.
-- All amounts are in PLN, use `Decimal` arithmetic and are rounded to grosze. The sum of the
-  `lines` always equals `total`.
-
-Example:
-
-```bash
-curl -X POST http://localhost:8000/api/v1/pricing/quote \
-  -H "Content-Type: application/json" \
-  -d '{
-    "service_type": "full_moving",
-    "start_datetime": "2027-05-10T08:00:00Z",
-    "end_datetime": "2027-05-10T16:00:00Z",
-    "origin": {"latitude": 54.352000, "longitude": 18.646600},
-    "destination": {"latitude": 54.441800, "longitude": 18.560100},
-    "helpers": 3,
-    "floor": 2,
-    "has_elevator": false,
-    "additional_service": true
-  }'
-```
-
-### Locations and service area
-
-The frontend can resolve an address in two ways: type it and pick a suggestion
-(`GET /locations/search`) or click the map and reverse-geocode the point
-(`GET /locations/reverse`). Both endpoints proxy Geoapify and return normalized
-`address`, `latitude`, `longitude`, `place_id`, `city` and `country` fields. Search results
-are biased towards the configured service-area center and limited to 10 items.
-
-Every result also contains `in_service_area` and `distance_from_center_km`. The same check is
-available standalone through `POST /locations/validate`, which works without a Geoapify key
-and returns the configured `radius_km`. This endpoint is the server-side gate for the booking
-area; the frontend only displays the result.
-
-The booking form keeps the address text and the coordinates in sync: editing the address
-clears the previously picked point, and clicking the map overwrites the address with the
-reverse-geocoded one, so a booking can never mix a typed street with a different map point.
-
-The service area is a circle centred on Sopot pier by default. It is configured with
-`SERVICE_AREA_CENTER_LATITUDE`, `SERVICE_AREA_CENTER_LONGITUDE` and
-`SERVICE_AREA_RADIUS_KM` (default `30` km). Distances use the haversine formula and are
-rounded to 0.01 km.
-
-Provider responses are validated before they reach the client. Malformed payloads, provider
-errors and timeouts return `502`; a missing `GEOAPIFY_API_KEY` returns `503`; an empty reverse
-geocoding result returns `404`.
-
-Example:
-
-```bash
-curl -X POST http://localhost:8000/api/v1/locations/validate \
-  -H "Content-Type: application/json" \
-  -d '{"latitude": 54.4416, "longitude": 18.5601}'
-```
-
-```bash
-curl "http://localhost:8000/api/v1/locations/search?q=Gda%C5%84sk%20Wrzeszcz&limit=5"
-```
-
-### Bookings and guest access
-
-`POST /api/v1/bookings` creates a guest booking. The server validates the contact data and the
-service-specific location set, checks every point against the service area, recalculates the
-price inside the transaction and assigns resources before returning:
-
-| Service | Locations | Assigned resources |
-| --- | --- | --- |
-| Self Drive | `pickup` + `return`; `vehicle_id` required | Selected vehicle |
-| Van + Driver | `loading` + `unloading` | Available vehicle + one driver |
-| Full Moving | `loading` + `unloading` | Available vehicle + one driver + `helpers` movers |
-
-Van + Driver and Full Moving accept an optional `items` list (`item_name`, `quantity`,
-`description`). `moving_details` (property type, floor, elevator, carry-in/out, boxes) is
-required for Full Moving and rejected for the other services. Apartments, offices and retail
-units must include a floor; houses, warehouses and halls may omit it. The declared helper count
-is stored on the booking (`helpers_requested`) and later reassignments must keep exactly that
-many movers. Item lists never change the price in the MVP.
-
-The response contains the complete booking and an `access_token`. The token is shown **once**;
-only its SHA-256 hash is stored. Send it as the `X-Booking-Token` header or as `?token=` in a
-shareable link to `GET /bookings/{id}` or to cancel the booking. Missing or invalid tokens never
-expose another customer's booking. Seeded demo bookings have no guest token.
-
-Booking statuses are controlled transitions. Every change is appended to `booking_events` with
-the previous status, new status, actor and optional note.
-
-| From | Allowed next statuses |
+| Area | Endpoints |
 | --- | --- |
-| `pending` | `confirmed`, `rejected`, `cancelled` |
-| `confirmed` | `ready_for_pickup`, `in_progress`, `cancelled` |
-| `ready_for_pickup` | `in_progress`, `cancelled` |
-| `in_progress` | `completed`, `cancelled` |
-| `completed`, `rejected`, `cancelled` | — (terminal) |
+| Catalog | `GET /vehicles`, `GET /pricing/rules` |
+| Availability | `GET /availability/vehicles`, `GET /availability/employees`, `POST /availability/check` |
+| Pricing | `POST /pricing/quote` (server-side quote with a line breakdown) |
+| Locations | `GET /locations/search`, `GET /locations/reverse`, `POST /locations/validate` |
+| Guest bookings | `POST /bookings`, `GET /bookings/{id}`, `PATCH /bookings/{id}/cancel`, `GET /bookings/{id}/handover` |
+| AI assistant | `GET /assistant/status`, `POST /assistant/move-plan` |
+| Provider bookings | `GET /provider/dashboard`, `GET`/`POST /provider/bookings`, `PATCH /provider/bookings/{id}/status`, `PATCH /provider/bookings/{id}/schedule`, `POST /provider/bookings/{id}/assign-resources`, `POST /bookings/{id}/handover` |
+| Provider resources | CRUD on `/provider/vehicles` and `/provider/employees`, their `/unavailability` blocks, `GET`/`PATCH /provider/pricing-rules` |
 
-Only Self Drive can use `ready_for_pickup`, and a Self Drive booking must pass through it before
-`in_progress`. The transition is rejected until the handover record contains a generated lockbox
-code and pickup instructions, so the customer is never told to collect a van without the details
-needed to open it. Cancelling or rejecting a booking releases its vehicle and employee windows
-without deleting the assignment history. The Provider can reassign resources through
-`POST /provider/bookings/{id}/assign-resources`; the same availability checks and database
-exclusion constraints apply.
+## Business rules
 
-The Provider can also run the booking side of the business from the panel:
+- **Service area:** every address must be within 30 km of the Sopot pier (configurable).
+- **Availability:** a booking holds its van and staff for the whole window plus a 60-minute
+  buffer. Cancelled and rejected bookings free them again.
+- **Pricing:** time is billed in started hours with a minimum per service.
+  - **Self Drive:** the van's hourly rate under 24 h, then full days plus extra hours, which never
+    cost more than one more day. No charge per kilometre.
+  - **Van + Driver:** base fee + hours + driving-route kilometres.
+  - **Full Moving:** the same, plus a fee per mover, a surcharge per floor and a no-elevator
+    surcharge.
+- **Statuses:** `pending → confirmed → (ready_for_pickup) → in_progress → completed`, with
+  `rejected` and `cancelled` as exits. Self Drive must pass `ready_for_pickup`, which requires a
+  lockbox code and pickup instructions. Guests can cancel until the service starts.
 
-- **Phone bookings.** `POST /provider/bookings` takes the same payload as a guest booking and runs
-  the same service-area, pricing and availability checks. The booking starts `confirmed`, the
-  history records the Provider as its author, and the response contains the guest token so the
-  panel can show a private link to send to the customer.
-- **Rescheduling.** `PATCH /provider/bookings/{id}/schedule` moves a `pending`, `confirmed` or
-  `ready_for_pickup` booking to a new future window. The assigned vehicle and staff stay the
-  same and must be free in the new window (otherwise `409`, so reassign them first). The price is
-  recalculated from the current rules and the change is recorded in the history.
-- **Safe deactivation.** A vehicle or employee with an open booking (not completed, rejected or
-  cancelled, and not over yet) cannot be deactivated, and an assigned employee cannot change
-  role. The API returns `409` until those bookings are reassigned or closed.
-- **Overdue bookings.** The dashboard lists confirmed bookings whose start time has passed
-  without "Start service" separately, so they are not lost between "upcoming" and "in progress".
+## AI move assistant
 
-### AI move assistant
+Customers rarely know how many movers or what size of van they need. On the "Job details" step of
+Van + Driver and Full Moving they can describe the job in any language, for example *"2-room flat
+on the 3rd floor without a lift, sofa, fridge, washing machine and about 20 boxes"*. The assistant
+fills in the property type, floor, elevator, boxes, item list and the suggested crew size, explains
+its choice in one sentence and can suggest switching to the better-fitting service.
 
-Most customers do not know how many movers or how big a van they need. On the "Job details" step
-of Van + Driver and Full Moving they can describe the job in their own words, in any language
-(for example *"2-room flat on the 3rd floor without a lift, sofa, fridge, washing machine and
-about 20 boxes"*). The assistant fills in the property type, floor, elevator, boxes, item list
-and, for Full Moving, a suggested crew size, and explains its suggestion in one sentence. If the
-description fits the other service better, it offers a button to switch.
-
-The assistant only pre-fills the form. The customer reviews every field, and prices and
-availability are still calculated by the server from the reviewed values, so the model can never
-set a price or book anything.
+The AI only pre-fills the form. The customer reviews every field, and the server still calculates
+the price and availability, so the model can never set a price or book anything.
 
 The system prompt lives in
 [`backend/app/modules/assistant/prompts/move_plan_system.md`](backend/app/modules/assistant/prompts/move_plan_system.md).
-Customer text is untrusted input, so it is defended in layers rather than by the prompt alone:
+Customer text is untrusted, so it is defended in layers:
 
-1. **Input limits.** 10–2000 characters, control characters removed, and the data delimiter tags
-   stripped so the text cannot close its block and pose as instructions.
-2. **Prompt-attack classifier.** The text first goes to Llama Prompt Guard 2. Scores of 0.8 or
-   higher are refused before the instruction-following model ever sees them. If the classifier
-   is unavailable, the request continues on the remaining layers.
-3. **System prompt rules.** The description is wrapped in `<customer_description>` tags and
-   treated as data: instructions or role changes inside it are ignored, the prompt is never
-   revealed, and prices, availability and promises are off limits. Off-topic or manipulative
-   text is answered with `is_moving_request: false`, which the API turns into a polite refusal.
-4. **Strict output validation.** The model must answer in JSON mode, and the answer is validated
-   with Pydantic (allowed enums, numeric ranges, at most 30 items). Anything else is a `502`, so
-   malformed output never reaches the form. Helpers are capped at `MAX_MOVING_HELPERS`, floors
-   are dropped for properties without floors, and any text containing links, e-mail addresses or
-   markup is discarded before it is shown.
-5. **Abuse limits.** 10 requests per minute per client, a 20-second timeout and a bounded token
-   budget protect the shared free quota. The key stays on the server, and customer descriptions
-   are never logged.
+1. **Input limits:** 10–2000 characters, with control characters and the data delimiter tags
+   stripped.
+2. **Prompt-attack classifier:** Llama Prompt Guard 2 refuses obvious attacks before the main
+   model sees them.
+3. **Prompt rules:** the description is wrapped in tags and treated as data. The model ignores
+   instructions inside it, never reveals the prompt and never talks about prices or availability.
+4. **Strict output validation:** JSON mode plus a Pydantic schema. Invalid answers are rejected,
+   helpers are capped, and text with links, e-mail addresses or markup is dropped.
+5. **Abuse limits:** 10 requests per minute per client, a timeout and a token budget. The key
+   stays on the server, and descriptions are never logged.
 
-### Handover and lockbox codes
+## Known limitations
 
-For Self Drive, the Provider prepares the physical lockbox handover with
-`POST /bookings/{id}/handover`. Sending `generate_code: true` creates a random 6-digit code;
-sending it again rotates the code. Pickup and return instructions can be updated independently.
-
-The Provider can always read the code and instructions. The guest can read them through
-`GET /bookings/{id}/handover` only when the booking is `ready_for_pickup`, `in_progress` or
-`completed`. A booking can only become `ready_for_pickup` after both the code and the pickup
-instructions exist. Booking details never contain the lockbox code.
-
-Codes are never hashed because the Provider has to read them. They are encrypted with
-AES-256-GCM using `HANDOVER_ENCRYPTION_KEY` and stored with a format version, nonce and
-ciphertext (`v1:<base64>`). They are never logged or returned to unauthorized users. There is no
-vehicle-arrival or automatic-return confirmation endpoint.
-
-## Frontend
-
-The SPA is served by nginx with an `/index.html` fallback, so deep links can be opened directly.
-
-| Route | Purpose |
-| --- | --- |
-| `/` | Landing page: hero, how our company works, the three services, the fleet (from `GET /vehicles`) and the pricing method |
-| `/book/{self-drive,van-driver,full-moving}` | Step-by-step booking wizard |
-| `/booking/{id}?token=…` | Booking confirmation, status timeline, cancellation and handover |
-| `/provider/login` | Provider sign-in |
-| `/provider` | Dashboard: new, overdue, upcoming and active bookings plus available vehicles |
-| `/provider/bookings` | Booking list with status, service and assigned-employee filters |
-| `/provider/bookings/new` | Phone booking: the same wizard as guests use, created as confirmed |
-| `/provider/bookings/{id}` | Booking detail: timeline, status actions, rescheduling, resource assignment, handover |
-| `/provider/vehicles` | Fleet management (add, edit, deactivate, downtime blocks) |
-| `/provider/employees` | Employee management (add, edit, deactivate, unavailability blocks) |
-| `/provider/pricing` | Pricing-rule editor for all three services |
-
-The wizard keeps its own draft state and renders only the current step: date and locations →
-vehicle → job details (transport and moving only) → helpers (Full Moving only) → quote → customer
-details → summary. The chosen service comes from the route, so there is no separate service step;
-switching it keeps the entered locations and contact data and clears only the vehicle choice. Validation errors and API failures leave every entered value in place, so a
-failed request never forces the customer to start over.
-
-The quote shown in the wizard comes from `POST /pricing/quote`; the frontend displays the
-server's breakdown and never calculates a final price. Availability is requested per time
-window, and the create request is authoritative: the server recalculates the price and assigns
-resources again.
-
-The confirmation page doubles as the status page. The access token travels in the link, and the
-page also keeps it in `sessionStorage` so a reload of the same tab keeps working. The page shows
-the status badge, the recorded status timeline and, for Self Drive, the lockbox code once the
-Provider has prepared it. A guest can cancel a booking while it is `pending`, `confirmed` or
-`ready_for_pickup`.
-
-The Provider panel lives under `/provider/*` with its own layout, auth guard and lazy-loaded
-chunks; feature code stays in `features/provider/*`. The login token is stored in
-`sessionStorage` (`janusztrans.provider.token`) and attached to every request as a bearer header. A
-401 response clears the session and returns to the sign-in page. The booking detail reuses the
-customer-side presentation components with provider-facing wording, so statuses, timeline and
-handover are rendered from one set of components on both sides.
-
-## Known MVP limitations
-
-- Guest bookings only (no customer accounts in the MVP). `GET /bookings/me` is therefore not
-  implemented; guests use the one-time access token instead. A lost token cannot be recovered.
-- No online payments, reviews, e-mail notifications or calendar integrations. Confirmation and
-  status are shown in the browser.
-- The vehicle lockbox is physical: the backend generates and stores an encrypted 6-digit code,
-  but the driver sets it manually. There are no arrival or automatic-return statuses.
-- No separate admin role — the Provider manages all company resources.
-- Item lists and descriptions are booking data; the MVP price does not vary by item count
-  or item type. The quote covers the service, duration, vehicle, distance, helpers, floors and
-  elevator access.
-- Address search, reverse geocoding and route-distance pricing need a Geoapify key. Without it,
-  locations can still be validated, and pricing falls back to a straight-line distance that is
-  labelled `haversine` in the quote.
-- Self Drive has no mileage limit or overage fee. Only the pickup and return points are checked
-  against the service area, so the van can be driven outside it during the rental. A per-day
-  kilometre allowance, an overage rate and an odometer field would be the natural next step.
-- The AI assistant's rate limit is kept in memory of the single API process and keys on the
-  `X-Real-IP` header set by nginx. Several API workers, or clients calling port 8000 directly,
-  would need a shared store and a trusted-proxy setup.
-- Status changes are not tied to the clock: the Provider decides when a service starts or ends,
-  so a booking can be completed early. Overdue bookings are highlighted on the dashboard instead.
-- The optional `additional_service` flag is priced at creation but not stored on the booking, so
-  rescheduling recalculates the price without it. The booking wizard never sets it.
-
-## Possible extensions
-
-These are deliberately out of MVP scope, documented so the trade-offs are explicit:
-
-- **E-mail the lockbox code.** Today the code appears only on the guest's private booking page,
-  protected by the access token. Sending it by e-mail (or SMS) after the Provider prepares the
-  handover would be friendlier, but it needs a notifications module with an SMTP/API adapter,
-  templates, retries and a decision about sending sensitive data outside the app.
-- **Mileage policy for Self Drive.** A kilometre allowance per rental day plus a clearly priced
-  overage line in the quote would close the current gap described above.
-- **Second-driver and age rules.** The MVP collects only the booking contact; a rental agreement
-  with driver details, licence checks and an age surcharge would be the next layer.
+- No customer accounts, online payments, e-mail notifications or calendar sync (out of MVP scope).
+  A lost booking link cannot be recovered.
+- The lockbox is physical: the code is generated in the app but set on the box by hand.
+- Self Drive has no mileage limit, and only the pickup and return points are checked against the
+  service area.
+- Status changes are not tied to the clock; overdue bookings are highlighted on the dashboard
+  instead.
+- The AI rate limit is in memory of a single API process and trusts the `X-Real-IP` header set by
+  nginx.
 
 ## AI usage
 
-The project was built with **Claude Code** as a coding assistant. Inside the application, AI is
-used for one feature only: the [AI move assistant](#ai-move-assistant) in the booking wizard.
+The project was built with **Claude Code** as a coding assistant. Inside the app, AI powers only
+the [move assistant](#ai-move-assistant).
 
-- **Specification first.** Before any code, the functional scope (services, booking rules,
-  statuses, pricing, service area) was written down in a local specification file. Every task
-  given to the assistant referred to it, so the generated code followed agreed rules instead of
-  invented ones.
-- **Rules for the agent.** [`AGENTS.md`](AGENTS.md) and the area guides in
-  [`docs/agents/`](docs/agents/) define what good code means in this repository: file and
-  function size goals, one responsibility per file, `Decimal` for money, timezone-aware
-  datetimes, the server owning every price, no dead code, and the checks that must pass before a
-  change is reported. They are committed so the configuration can be reviewed.
-- **Small, milestone-based steps.** The work followed the milestones in the status table above.
-  Each step was implemented with the assistant and verified with `ruff`, `pytest` and the
-  TypeScript build before it was committed.
-- **Human review.** Generated code was read, tested manually in the browser and corrected where
-  it did not match the specification. Business decisions (pricing rules, status transitions,
-  handover flow, what stays out of the MVP) were made by me, not by the assistant.
+- **Specification first:** the functional scope (services, booking rules, statuses, pricing,
+  service area) was written down before any code, and every task referred to it.
+- **Rules for the agent:** [`AGENTS.md`](AGENTS.md) and [`docs/agents/`](docs/agents/) define the
+  code standards (file and function size, one responsibility per file, `Decimal` for money, the
+  server owning prices, no dead code) and the checks that must pass. They are committed so the
+  setup can be reviewed.
+- **Small, verified steps:** each step was checked with `ruff`, `pytest` and the TypeScript build
+  before committing.
+- **Human review:** generated code was read, tested in the browser and corrected. Business
+  decisions (pricing, status flow, handover, MVP scope) were made by me.
