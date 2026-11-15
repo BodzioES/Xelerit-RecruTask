@@ -106,10 +106,11 @@ export default function StepSummary({
           ) : null}
           {!selfDrive && itemSummary ? <SummaryRow label="Items">{itemSummary}</SummaryRow> : null}
           {moving ? (
-            <SummaryRow label="Helpers">
-              {draft.helpers === 0
-                ? "No helpers"
-                : `${draft.helpers} ${draft.helpers === 1 ? "helper" : "helpers"}`}
+            <SummaryRow label="Crew">
+              1 driver
+              {draft.helpers > 0
+                ? ` + ${draft.helpers} ${draft.helpers === 1 ? "mover" : "movers"}`
+                : " and no movers"}
             </SummaryRow>
           ) : null}
           <SummaryRow label="Contact">

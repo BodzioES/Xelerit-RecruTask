@@ -41,7 +41,7 @@ export default function StepHelpers({ draft, onChange, onNext, onBack }: WizardS
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     if (tooManyHelpers) {
-      setSubmitError("Reduce the number of helpers to match today's availability.");
+      setSubmitError("Reduce the number of movers to match today's availability.");
       return;
     }
     if (noDriver) {
@@ -55,8 +55,8 @@ export default function StepHelpers({ draft, onChange, onNext, onBack }: WizardS
   return (
     <form noValidate onSubmit={handleSubmit} className="space-y-6">
       <Panel
-        title="Moving helpers"
-        description="One driver is always included. Add movers to help with carrying and loading."
+        title="Crew"
+        description="A driver is always included, even with no helpers. Add movers for carrying and loading."
       >
         {movers.isPending ? <LoadingState label="Checking mover availability" rows={1} /> : null}
 
@@ -76,7 +76,8 @@ export default function StepHelpers({ draft, onChange, onNext, onBack }: WizardS
             </p>
             {availableMovers === 0 ? (
               <Notice tone="warning">
-                Continue without helpers, or go back and choose another date for a larger crew.
+                Continue with the driver only, or go back and choose another date for a larger
+                crew.
               </Notice>
             ) : null}
           </div>
@@ -84,27 +85,39 @@ export default function StepHelpers({ draft, onChange, onNext, onBack }: WizardS
 
         <div className="mt-4 max-w-xs">
           <SelectInput
-            label="Number of helpers"
+            label="Movers"
             value={draft.helpers}
             onChange={(event) => onChange({ helpers: Number(event.target.value) })}
-            error={tooManyHelpers ? "More helpers were requested than are available." : undefined}
-            hint="You can add up to four helpers."
+            error={tooManyHelpers ? "More movers were requested than are available." : undefined}
+            hint="Up to four movers can join the driver."
           >
             {draft.helpers > maxHelpers ? (
               <option value={draft.helpers} disabled>
-                {draft.helpers} helpers (not available)
+                Driver + {draft.helpers} movers (not available)
               </option>
             ) : null}
             {Array.from({ length: maxHelpers + 1 }, (_, count) => (
               <option key={count} value={count}>
-                {count === 0 ? "No helpers" : `${count} ${count === 1 ? "helper" : "helpers"}`}
+                {count === 0
+                  ? "Driver only"
+                  : `Driver + ${count} ${count === 1 ? "mover" : "movers"}`}
               </option>
             ))}
           </SelectInput>
         </div>
 
+        <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-ink-700">
+          Your crew:{" "}
+          <span className="font-medium text-ink-900">
+            1 driver
+            {draft.helpers > 0
+              ? ` + ${draft.helpers} ${draft.helpers === 1 ? "mover" : "movers"}`
+              : " and no movers"}
+          </span>
+        </p>
+
         <p className="mt-4 text-xs text-ink-500">
-          The driver and helpers are assigned automatically when the booking is created. You do not
+          The driver and movers are assigned automatically when the booking is created. You do not
           need to choose people.
         </p>
       </Panel>

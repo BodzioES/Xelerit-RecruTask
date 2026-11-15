@@ -35,7 +35,7 @@ export function wizardSteps(serviceType: ServiceType): WizardStep[] {
   }
 
   if (serviceType === "full_moving") {
-    steps.push({ id: "helpers", label: "Helpers" });
+    steps.push({ id: "helpers", label: "Crew" });
   }
 
   steps.push(

@@ -54,9 +54,11 @@ export default function BookingDetailsPanel({ booking }: Props) {
           </SummaryRow>
         ) : null}
         {booking.service_type === "full_moving" ? (
-          <SummaryRow label="Helpers requested">
-            {booking.helpers_requested}{" "}
-            {booking.helpers_requested === 1 ? "mover" : "movers"}
+          <SummaryRow label="Crew">
+            1 driver
+            {booking.helpers_requested > 0
+              ? ` + ${booking.helpers_requested} ${booking.helpers_requested === 1 ? "mover" : "movers"}`
+              : " and no movers"}
           </SummaryRow>
         ) : null}
         {moving ? (
