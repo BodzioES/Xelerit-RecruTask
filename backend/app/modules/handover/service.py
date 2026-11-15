@@ -40,7 +40,7 @@ def upsert_handover(db: Session, booking: Booking, payload: HandoverUpsert) -> H
     return _to_read(record)
 
 
-def read_handover(db: Session, booking: Booking, *, as_provider: bool) -> HandoverRead:
+def read_handover(booking: Booking, *, as_provider: bool) -> HandoverRead:
     _ensure_self_drive(booking)
     record = booking.handover
     if record is None:

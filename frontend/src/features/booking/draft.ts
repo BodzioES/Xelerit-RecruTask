@@ -11,12 +11,8 @@ import type {
 } from "./types";
 import { FLOOR_PROPERTY_TYPES } from "./types";
 
-export function emptyLocation(): DraftLocation {
+function emptyLocation(): DraftLocation {
   return { address: "", latitude: null, longitude: null, placeId: null, inServiceArea: null };
-}
-
-export function hasCoordinates(location: DraftLocation): boolean {
-  return location.latitude !== null && location.longitude !== null;
 }
 
 function point(location: DraftLocation): CoordinatePoint | null {
@@ -76,18 +72,12 @@ export function draftEndIso(draft: BookingDraft): string | null {
   return endIso || null;
 }
 
-export function draftOrigin(draft: BookingDraft): CoordinatePoint | null {
+function draftOrigin(draft: BookingDraft): CoordinatePoint | null {
   return point(isSelfDrive(draft) ? draft.pickup : draft.loading);
 }
 
-export function draftDestination(draft: BookingDraft): CoordinatePoint | null {
+function draftDestination(draft: BookingDraft): CoordinatePoint | null {
   return point(isSelfDrive(draft) ? draft.returnLocation : draft.unloading);
-}
-
-export function draftLocations(draft: BookingDraft): DraftLocation[] {
-  return isSelfDrive(draft)
-    ? [draft.pickup, draft.returnLocation]
-    : [draft.loading, draft.unloading];
 }
 
 export function quoteRequestFromDraft(

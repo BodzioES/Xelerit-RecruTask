@@ -8,7 +8,7 @@ export type EmployeeInput = {
   is_active: boolean;
 };
 
-export type UnavailabilityInput = {
+type UnavailabilityInput = {
   start_datetime: string;
   end_datetime: string;
   reason: string | null;
@@ -33,10 +33,6 @@ export function updateProviderEmployee(
   input: EmployeeInput,
 ): Promise<ProviderEmployee> {
   return providerPatch(`/provider/employees/${employeeId}`, input);
-}
-
-export function deactivateProviderEmployee(employeeId: string): Promise<void> {
-  return providerDelete(`/provider/employees/${employeeId}`);
 }
 
 export function setEmployeeActive(

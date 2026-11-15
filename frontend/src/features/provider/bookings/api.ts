@@ -24,7 +24,7 @@ export type AssignResourcesPayload = {
   employee_ids?: string[];
 };
 
-export type HandoverPayload = {
+type HandoverPayload = {
   generate_code: boolean;
   pickup_instructions: string | null;
   return_instructions: string | null;
@@ -97,7 +97,7 @@ export function fetchAvailableEmployees(
   );
 }
 
-export function fetchProviderHandover(bookingId: string): Promise<HandoverDetails> {
+function fetchProviderHandover(bookingId: string): Promise<HandoverDetails> {
   return providerGet(`/bookings/${bookingId}/handover`);
 }
 

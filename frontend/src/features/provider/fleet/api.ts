@@ -19,7 +19,7 @@ export type VehicleInput = {
   is_active: boolean;
 };
 
-export type UnavailabilityInput = {
+type UnavailabilityInput = {
   start_datetime: string;
   end_datetime: string;
   reason: string | null;
@@ -44,10 +44,6 @@ export function updateProviderVehicle(
   input: VehicleInput,
 ): Promise<ProviderVehicle> {
   return providerPatch(`/provider/vehicles/${vehicleId}`, input);
-}
-
-export function deactivateProviderVehicle(vehicleId: string): Promise<void> {
-  return providerDelete(`/provider/vehicles/${vehicleId}`);
 }
 
 export function setVehicleActive(

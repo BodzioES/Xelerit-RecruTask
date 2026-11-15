@@ -12,7 +12,7 @@ import TextInput from "@/components/ui/TextInput";
 import { combineLocal, formatDateTime, localDateValue, localTimeValue } from "@/lib/datetime";
 import { errorMessage } from "@/lib/errors";
 
-export type UnavailabilityBlock = {
+type UnavailabilityBlock = {
   id: string;
   start_datetime: string;
   end_datetime: string;
@@ -20,7 +20,7 @@ export type UnavailabilityBlock = {
   created_at: string;
 };
 
-export type UnavailabilityInput = {
+type UnavailabilityInput = {
   start_datetime: string;
   end_datetime: string;
   reason: string | null;

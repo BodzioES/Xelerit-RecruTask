@@ -183,4 +183,6 @@ def test_seeded_booking_windows_are_consistent() -> None:
                 # Assignments are released only once the booking is closed, so the
                 # check also holds on a database that already has a history.
                 released = assignment.is_released
-                assert released is (booking.status in {BookingStatus.CANCELLED, BookingStatus.REJECTED})
+                assert released is (
+                    booking.status in {BookingStatus.CANCELLED, BookingStatus.REJECTED}
+                )

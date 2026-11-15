@@ -46,4 +46,4 @@ def read_handover(
         provider=provider,
         token=token,
     )
-    return service.read_handover(db, booking, as_provider=provider is not None)
+    return service.read_handover(booking, as_provider=provider is not None)

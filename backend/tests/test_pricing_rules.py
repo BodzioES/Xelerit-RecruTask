@@ -29,6 +29,20 @@ def test_provider_reads_all_pricing_rules(
     assert all("helper_rate" in rule for rule in rules)
 
 
+def test_guest_reads_the_published_rates_without_a_token(client: TestClient) -> None:
+    response = client.get("/api/v1/pricing/rules")
+    assert response.status_code == 200, response.text
+
+    rules = {rule["service_type"]: rule for rule in response.json()}
+    assert set(rules) == {service_type.value for service_type in ServiceType}
+    assert Decimal(rules["van_driver"]["price_per_km"]) >= 0
+
+
+def test_guest_cannot_edit_rates(client: TestClient) -> None:
+    response = client.patch(f"{RULES_URL}/van_driver", json={"price_per_km": "0.01"})
+    assert response.status_code == 401, response.text
+
+
 def test_provider_updates_a_rule_and_quotes_use_it(
     client: TestClient,
     auth_headers: dict[str, str],

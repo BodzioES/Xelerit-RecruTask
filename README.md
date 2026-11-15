@@ -30,6 +30,22 @@ end-to-end booking process — not a feature-rich commercial system.
 - **Maps:** Leaflet, React Leaflet, OpenStreetMap, Geoapify (geocoding and routing)
 - **Infrastructure:** Docker, Docker Compose, nginx
 
+### Why PostgreSQL instead of SQLite
+
+The task suggests an in-memory database or SQLite to keep the setup simple. JanuszTrans uses
+PostgreSQL on purpose, because the core promise of the app is that a van or an employee can never
+be booked twice for overlapping times:
+
+- `EXCLUDE USING GIST` constraints on time ranges reject overlapping bookings and downtime blocks
+  inside the database, even when two requests arrive at the same moment. SQLite has no range
+  types or exclusion constraints, so the same guarantee would need application-level locking.
+- Booking numbers (`MV-<year>-<6 digits>`) come from a PostgreSQL sequence, and timestamps are
+  stored as `timestamptz`, which keeps every domain time timezone-aware.
+
+The setup stays as simple as the task asks for: the database runs as a container in the same
+Compose stack, migrations and demo data are applied automatically on start, and nothing has to
+be installed or configured by hand. `docker compose up --build` is the only command needed.
+
 ## Repository layout
 
 ```
@@ -41,19 +57,35 @@ docker-compose.yml
 
 ## Getting started
 
+Requirements: Docker with Docker Compose. Nothing else has to be installed locally.
+
 1. Copy the environment template:
 
    ```bash
    cp .env.example .env
    ```
 
-2. Start the whole stack:
+2. Add a free Geoapify API key. The booking wizard needs it for address search and for
+   picking a point on the map, so without it a booking cannot be completed.
+
+   1. Create a free account at https://myprojects.geoapify.com/ (no credit card required).
+   2. Create a project; an API key is generated for it.
+   3. Paste the key into `.env`:
+
+      ```bash
+      GEOAPIFY_API_KEY=your-key-here
+      ```
+
+   The free tier is far above what a local demo needs. The Provider panel, the API and the
+   pricing engine also work without the key.
+
+3. Start the whole stack:
 
    ```bash
    docker compose up --build
    ```
 
-3. Open:
+4. Open:
 
    | Service | URL |
    | --- | --- |
@@ -62,7 +94,7 @@ docker-compose.yml
    | Swagger UI | http://localhost:8000/docs (also http://localhost:8080/docs) |
    | PostgreSQL | `localhost:5433` (host port, configurable) |
 
-4. Stop the stack:
+5. Stop the stack:
 
    ```bash
    docker compose down
@@ -131,6 +163,9 @@ docker compose run --rm backend pytest
 
 # Frontend: TypeScript check and the production build
 docker compose build frontend
+
+# Frontend: unit tests (Vitest), from the frontend/ directory with Node 22
+npm ci && npm test
 ```
 
 ## API documentation
@@ -179,6 +214,7 @@ validated against the `provider` role; guest and customer routes stay public.
 | GET | `/api/v1/provider/employees/{id}/unavailability` | Provider | Employee unavailability periods |
 | POST | `/api/v1/provider/employees/{id}/unavailability` | Provider | Block an employee (leave, training) |
 | DELETE | `/api/v1/provider/employees/{id}/unavailability/{blockId}` | Provider | Remove an employee block |
+| GET | `/api/v1/pricing/rules` | — | Current rates, shown on the landing page (read-only) |
 | POST | `/api/v1/pricing/quote` | — | Server-side price quote with a line-item breakdown |
 | GET | `/api/v1/provider/pricing-rules` | Provider | Read the rates used for every service |
 | PATCH | `/api/v1/provider/pricing-rules/{service_type}` | Provider | Edit the rates for one service |
@@ -388,7 +424,7 @@ The SPA is served by nginx with an `/index.html` fallback, so deep links can be 
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Landing page: hero, how our company works, the three services and the pricing method |
+| `/` | Landing page: hero, how our company works, the three services, the fleet (from `GET /vehicles`) and the pricing method |
 | `/book/{self-drive,van-driver,full-moving}` | Step-by-step booking wizard |
 | `/booking/{id}?token=…` | Booking confirmation, status timeline, cancellation and handover |
 | `/provider/login` | Provider sign-in |
@@ -457,5 +493,21 @@ These are deliberately out of MVP scope, documented so the trade-offs are explic
 
 ## AI usage
 
-AI assistance is used for scaffolding, implementation and documentation. All generated code is
-reviewed, tested and adapted to the specification. Detailed notes are maintained in this README.
+The project was built with **Claude Code** as a coding assistant. The application itself has no
+AI features; AI was used only as a development tool.
+
+- **Specification first.** Before any code, the functional scope (services, booking rules,
+  statuses, pricing, service area) was written down in a local specification file. Every task
+  given to the assistant referred to it, so the generated code followed agreed rules instead of
+  invented ones.
+- **Rules for the agent.** [`AGENTS.md`](AGENTS.md) and the area guides in
+  [`docs/agents/`](docs/agents/) define what good code means in this repository: file and
+  function size goals, one responsibility per file, `Decimal` for money, timezone-aware
+  datetimes, the server owning every price, no dead code, and the checks that must pass before a
+  change is reported. They are committed so the configuration can be reviewed.
+- **Small, milestone-based steps.** The work followed the milestones in the status table above.
+  Each step was implemented with the assistant and verified with `ruff`, `pytest` and the
+  TypeScript build before it was committed.
+- **Human review.** Generated code was read, tested manually in the browser and corrected where
+  it did not match the specification. Business decisions (pricing rules, status transitions,
+  handover flow, what stays out of the MVP) were made by me, not by the assistant.

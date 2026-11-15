@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "/api/v1";
 
-export type FieldErrors = Record<string, string>;
+type FieldErrors = Record<string, string>;
 
 export class ApiError extends Error {
   readonly status: number;

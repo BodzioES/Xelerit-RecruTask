@@ -1,29 +1,13 @@
 import { Link } from "react-router-dom";
 
 import { buttonClassName } from "@/components/ui/Button";
+import FleetSection from "@/features/landing/components/FleetSection";
 import HowItWorksSection from "@/features/landing/components/HowItWorksSection";
+import PricingSection from "@/features/landing/components/PricingSection";
 import { SERVICES } from "@/lib/services";
 
 const heroCallButton =
   "inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 bg-white/5 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6";
-
-const pricingCards = [
-  {
-    title: "Self Drive — hours or days",
-    body: "Under 24 hours you pay the hourly rate. From 24 hours we charge full 24-hour days plus the remaining hours at the hourly rate. Leftover hours never cost more than another day.",
-    example: "A 28-hour rental = 1 day + 4 hours. If those 4 hours cost more than a day, we charge 2 days instead.",
-  },
-  {
-    title: "Van + Driver — time and distance",
-    body: "A base fee, the service hours and the route kilometres. The distance is the real driving route between loading and unloading, not a straight line.",
-    example: null,
-  },
-  {
-    title: "Full Moving — crew and access",
-    body: "A base fee, the service hours, the distance and the number of movers you choose. Floor and no-elevator surcharges are added only when the property needs them.",
-    example: null,
-  },
-];
 
 export default function HomePage() {
   return (
@@ -117,7 +101,7 @@ export default function HomePage() {
                   />
                 </div>
 
-                <ul className="mt-4 space-y-2 text-sm text-ink-700">
+                <ul className="mt-4 mb-6 space-y-2 text-sm text-ink-700">
                   {service.points.map((point) => (
                     <li key={point} className="flex items-start gap-2">
                       <span
@@ -129,13 +113,9 @@ export default function HomePage() {
                   ))}
                 </ul>
 
-                <p className="mt-auto border-t border-slate-200 pt-4 text-sm leading-relaxed text-ink-500">
-                  {service.pricing}
-                </p>
-
                 <Link
                   to={`/book/${service.slug}`}
-                  className={buttonClassName("secondary", "mt-5 w-full")}
+                  className={buttonClassName("secondary", "mt-auto w-full")}
                 >
                   Book {service.name}
                 </Link>
@@ -150,40 +130,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="pricing" className="scroll-mt-28 bg-slate-50 md:scroll-mt-20">
-        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
-              How the price is calculated
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-ink-500">
-              Every quote is calculated on our side before you confirm. It is recalculated when the
-              booking is created, so the price you accept is the price you pay.
-            </p>
-          </div>
+      <FleetSection />
 
-          <div className="mt-8 grid gap-4 lg:grid-cols-3">
-            {pricingCards.map((card) => (
-              <article
-                key={card.title}
-                className="rounded-2xl border border-slate-200 bg-white p-6"
-              >
-                <h3 className="text-base font-semibold text-ink-900">{card.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-700">{card.body}</p>
-                {card.example ? (
-                  <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-ink-500">
-                    {card.example}
-                  </p>
-                ) : null}
-              </article>
-            ))}
-          </div>
-
-          <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-ink-500">
-            Prices are in PLN. The quote step lists every line before you place the booking.
-          </p>
-        </div>
-      </section>
+      <PricingSection />
     </>
   );
 }

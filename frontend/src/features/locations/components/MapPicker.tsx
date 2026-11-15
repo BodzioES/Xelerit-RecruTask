@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 /** Sopot pier — the centre of the service area used by the backend. */
-export const SERVICE_AREA_CENTER: [number, number] = [54.4416, 18.5601];
+const SERVICE_AREA_CENTER: [number, number] = [54.4416, 18.5601];
 
 type PickHandlerProps = {
   onPick: (latitude: number, longitude: number) => void;

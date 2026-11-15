@@ -41,8 +41,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
   timeStyle: "short",
 });
 
-const dateFormatter = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
-
 const timeFormatter = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",
   minute: "2-digit",
@@ -52,12 +50,6 @@ export function formatDateTime(iso: string): string {
   const value = new Date(iso);
   if (Number.isNaN(value.getTime())) return iso;
   return dateTimeFormatter.format(value);
-}
-
-export function formatDate(iso: string): string {
-  const value = new Date(iso);
-  if (Number.isNaN(value.getTime())) return iso;
-  return dateFormatter.format(value);
 }
 
 export function formatTime(iso: string): string {

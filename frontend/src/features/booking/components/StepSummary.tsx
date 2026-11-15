@@ -21,7 +21,7 @@ import QuoteBreakdown from "./QuoteBreakdown";
 import SummaryRow from "@/components/ui/SummaryRow";
 import WizardFooter from "./WizardFooter";
 
-export type SummaryStepProps = WizardStepProps & {
+type SummaryStepProps = WizardStepProps & {
   onSubmit: () => void;
   isSubmitting: boolean;
   submitError: string | null;
