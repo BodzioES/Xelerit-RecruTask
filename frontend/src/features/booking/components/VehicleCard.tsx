@@ -4,18 +4,22 @@ import type { AvailableVehicle } from "@/types/api";
 type Props = {
   vehicle: AvailableVehicle;
   selected: boolean;
+  available: boolean;
   onSelect: () => void;
 };
 
-export default function VehicleCard({ vehicle, selected, onSelect }: Props) {
+export default function VehicleCard({ vehicle, selected, available, onSelect }: Props) {
   return (
     <label
       className={[
-        "flex cursor-pointer flex-col overflow-hidden rounded-2xl border bg-white transition",
+        "flex flex-col overflow-hidden rounded-2xl border bg-white transition",
+        available ? "cursor-pointer" : "cursor-not-allowed",
         "focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-600",
         selected
           ? "border-brand-500 ring-1 ring-brand-500"
-          : "border-slate-200 hover:border-brand-200",
+          : "border-slate-200",
+        available && !selected ? "hover:border-brand-200" : "",
+        available ? "" : "opacity-70",
       ].join(" ")}
     >
       <input
@@ -23,6 +27,7 @@ export default function VehicleCard({ vehicle, selected, onSelect }: Props) {
         name="vehicle"
         className="sr-only"
         checked={selected}
+        disabled={!available}
         onChange={onSelect}
       />
       <div className="flex h-36 items-center justify-center bg-slate-50">
@@ -47,8 +52,15 @@ export default function VehicleCard({ vehicle, selected, onSelect }: Props) {
               {vehicle.category} · {vehicle.year}
             </p>
           </div>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
-            Available
+          <span
+            className={[
+              "whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium",
+              available
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-slate-200 bg-slate-100 text-slate-600",
+            ].join(" ")}
+          >
+            {available ? "Available" : "Booked"}
           </span>
         </div>
 

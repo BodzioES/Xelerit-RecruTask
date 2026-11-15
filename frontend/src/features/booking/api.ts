@@ -7,11 +7,13 @@ import type {
   EmployeeRole,
   HandoverDetails,
   Quote,
+  Vehicle,
 } from "@/types/api";
 
 import type { CreateBookingRequest, QuoteRequest } from "./types";
 
 export const bookingKeys = {
+  fleet: () => ["vehicles", "fleet"] as const,
   vehicles: (startDatetime: string, endDatetime: string) =>
     ["availability", "vehicles", startDatetime, endDatetime] as const,
   employees: (startDatetime: string, endDatetime: string, role: EmployeeRole) =>
@@ -21,6 +23,10 @@ export const bookingKeys = {
   handover: (bookingId: string, token: string) =>
     ["bookings", bookingId, "handover", token] as const,
 };
+
+export function fetchFleetVehicles(): Promise<Vehicle[]> {
+  return apiGet("/vehicles");
+}
 
 export function fetchAvailableVehicles(
   startDatetime: string,

@@ -65,6 +65,12 @@ export type AvailableVehicle = {
   daily_price: DecimalString;
 };
 
+export type Vehicle = AvailableVehicle & {
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AvailableEmployee = {
   id: string;
   first_name: string;
