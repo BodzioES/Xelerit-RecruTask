@@ -104,8 +104,7 @@ export default function BookingStatusPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-[0.18em] text-brand-600">Booking</p>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
             {data.booking_number}
