@@ -84,7 +84,7 @@ export default function HomePage() {
 
       <HowItWorksSection />
 
-      <section id="services" className="border-y border-slate-200 bg-white">
+      <section id="services" className="scroll-mt-28 border-y border-slate-200 bg-white md:scroll-mt-20">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
@@ -150,7 +150,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="pricing" className="bg-slate-50">
+      <section id="pricing" className="scroll-mt-28 bg-slate-50 md:scroll-mt-20">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">

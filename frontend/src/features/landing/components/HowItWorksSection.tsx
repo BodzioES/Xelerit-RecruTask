@@ -19,7 +19,11 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section id="how-it-works" aria-labelledby="how-it-works-heading" className="bg-slate-50">
+    <section
+      id="how-it-works"
+      aria-labelledby="how-it-works-heading"
+      className="scroll-mt-28 bg-slate-50 md:scroll-mt-20"
+    >
       <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-2xl text-center">
           <h2

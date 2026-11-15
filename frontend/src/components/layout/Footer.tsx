@@ -16,7 +16,7 @@ export default function Footer() {
   });
 
   return (
-    <footer id="contact" className="border-t border-slate-200 bg-white">
+    <footer id="contact" className="scroll-mt-28 border-t border-slate-200 bg-white md:scroll-mt-20">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-ink-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
           <p className="font-medium text-ink-900">JanuszTrans</p>
