@@ -184,6 +184,7 @@ VEHICLE_SEEDS: list[dict[str, object]] = [
     },
 ]
 
+
 def _seed_vehicles(db: Session) -> None:
     if db.scalar(select(func.count(Vehicle.id))) > 0:
         return
