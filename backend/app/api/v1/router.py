@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1 import health
+from app.modules.assistant.router import router as assistant_router
 from app.modules.auth.router import router as auth_router
 from app.modules.availability.provider_router import router as provider_availability_router
 from app.modules.availability.router import router as availability_router
@@ -30,3 +31,4 @@ api_router.include_router(locations_router)
 api_router.include_router(bookings_router)
 api_router.include_router(provider_bookings_router)
 api_router.include_router(handover_router)
+api_router.include_router(assistant_router)

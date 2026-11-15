@@ -5,6 +5,7 @@ import Panel from "@/components/ui/Panel";
 import SelectInput from "@/components/ui/SelectInput";
 import TextArea from "@/components/ui/TextArea";
 import TextInput from "@/components/ui/TextInput";
+import MoveAssistantPanel from "@/features/assistant/components/MoveAssistantPanel";
 import type { PropertyType } from "@/types/api";
 
 import type { WizardStepProps } from "../steps";
@@ -33,6 +34,8 @@ export default function StepDetails({ draft, onChange, onNext, onBack }: WizardS
 
   return (
     <form noValidate onSubmit={handleSubmit} className="space-y-6">
+      <MoveAssistantPanel draft={draft} onChange={onChange} />
+
       <Panel
         title={moving ? "Property and access" : "Cargo"}
         description={

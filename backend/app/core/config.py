@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:8080,http://localhost:5173"
 
     geoapify_api_key: str = ""
+    # Groq serves an OpenAI-compatible chat API with a free tier; empty disables the assistant.
+    groq_api_key: str = ""
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+    groq_model: str = "openai/gpt-oss-120b"
+    groq_guard_model: str = "meta-llama/llama-prompt-guard-2-86m"
     resource_buffer_minutes: int = 60
     max_moving_helpers: int = 4
     # The lockbox code must be recoverable, so it is encrypted (not hashed).

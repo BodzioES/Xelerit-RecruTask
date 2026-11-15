@@ -28,6 +28,8 @@ end-to-end booking process — not a feature-rich commercial system.
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router,
   React Hook Form, Zod, Leaflet
 - **Maps:** Leaflet, React Leaflet, OpenStreetMap, Geoapify (geocoding and routing)
+- **AI:** Groq (free tier) — `openai/gpt-oss-120b` for the move assistant and Llama Prompt Guard 2
+  for prompt-attack detection
 - **Infrastructure:** Docker, Docker Compose, nginx
 
 ### Why PostgreSQL instead of SQLite
@@ -78,6 +80,10 @@ Requirements: Docker with Docker Compose. Nothing else has to be installed local
 
    The free tier is far above what a local demo needs. The Provider panel, the API and the
    pricing engine also work without the key.
+
+   Optional: for the AI move assistant, create a free key at https://console.groq.com/keys (no
+   credit card required) and add it as `GROQ_API_KEY=your-key-here`. Without it the assistant is
+   simply hidden.
 
 3. Start the whole stack:
 
@@ -215,6 +221,8 @@ validated against the `provider` role; guest and customer routes stay public.
 | POST | `/api/v1/provider/employees/{id}/unavailability` | Provider | Block an employee (leave, training) |
 | DELETE | `/api/v1/provider/employees/{id}/unavailability/{blockId}` | Provider | Remove an employee block |
 | GET | `/api/v1/pricing/rules` | — | Current rates, shown on the landing page (read-only) |
+| GET | `/api/v1/assistant/status` | — | Whether the AI move assistant is configured |
+| POST | `/api/v1/assistant/move-plan` | — | Turn a free-text move description into suggested booking fields |
 | POST | `/api/v1/pricing/quote` | — | Server-side price quote with a line-item breakdown |
 | GET | `/api/v1/provider/pricing-rules` | Provider | Read the rates used for every service |
 | PATCH | `/api/v1/provider/pricing-rules/{service_type}` | Provider | Edit the rates for one service |
@@ -420,6 +428,41 @@ The Provider can also run the booking side of the business from the panel:
 - **Overdue bookings.** The dashboard lists confirmed bookings whose start time has passed
   without "Start service" separately, so they are not lost between "upcoming" and "in progress".
 
+### AI move assistant
+
+Most customers do not know how many movers or how big a van they need. On the "Job details" step
+of Van + Driver and Full Moving they can describe the job in their own words, in any language
+(for example *"2-room flat on the 3rd floor without a lift, sofa, fridge, washing machine and
+about 20 boxes"*). The assistant fills in the property type, floor, elevator, boxes, item list
+and, for Full Moving, a suggested crew size, and explains its suggestion in one sentence. If the
+description fits the other service better, it offers a button to switch.
+
+The assistant only pre-fills the form. The customer reviews every field, and prices and
+availability are still calculated by the server from the reviewed values, so the model can never
+set a price or book anything.
+
+The system prompt lives in
+[`backend/app/modules/assistant/prompts/move_plan_system.md`](backend/app/modules/assistant/prompts/move_plan_system.md).
+Customer text is untrusted input, so it is defended in layers rather than by the prompt alone:
+
+1. **Input limits.** 10–2000 characters, control characters removed, and the data delimiter tags
+   stripped so the text cannot close its block and pose as instructions.
+2. **Prompt-attack classifier.** The text first goes to Llama Prompt Guard 2. Scores of 0.8 or
+   higher are refused before the instruction-following model ever sees them. If the classifier
+   is unavailable, the request continues on the remaining layers.
+3. **System prompt rules.** The description is wrapped in `<customer_description>` tags and
+   treated as data: instructions or role changes inside it are ignored, the prompt is never
+   revealed, and prices, availability and promises are off limits. Off-topic or manipulative
+   text is answered with `is_moving_request: false`, which the API turns into a polite refusal.
+4. **Strict output validation.** The model must answer in JSON mode, and the answer is validated
+   with Pydantic (allowed enums, numeric ranges, at most 30 items). Anything else is a `502`, so
+   malformed output never reaches the form. Helpers are capped at `MAX_MOVING_HELPERS`, floors
+   are dropped for properties without floors, and any text containing links, e-mail addresses or
+   markup is discarded before it is shown.
+5. **Abuse limits.** 10 requests per minute per client, a 20-second timeout and a bounded token
+   budget protect the shared free quota. The key stays on the server, and customer descriptions
+   are never logged.
+
 ### Handover and lockbox codes
 
 For Self Drive, the Provider prepares the physical lockbox handover with
@@ -496,6 +539,9 @@ handover are rendered from one set of components on both sides.
 - Self Drive has no mileage limit or overage fee. Only the pickup and return points are checked
   against the service area, so the van can be driven outside it during the rental. A per-day
   kilometre allowance, an overage rate and an odometer field would be the natural next step.
+- The AI assistant's rate limit is kept in memory of the single API process and keys on the
+  `X-Real-IP` header set by nginx. Several API workers, or clients calling port 8000 directly,
+  would need a shared store and a trusted-proxy setup.
 - Status changes are not tied to the clock: the Provider decides when a service starts or ends,
   so a booking can be completed early. Overdue bookings are highlighted on the dashboard instead.
 - The optional `additional_service` flag is priced at creation but not stored on the booking, so
@@ -516,8 +562,8 @@ These are deliberately out of MVP scope, documented so the trade-offs are explic
 
 ## AI usage
 
-The project was built with **Claude Code** as a coding assistant. The application itself has no
-AI features; AI was used only as a development tool.
+The project was built with **Claude Code** as a coding assistant. Inside the application, AI is
+used for one feature only: the [AI move assistant](#ai-move-assistant) in the booking wizard.
 
 - **Specification first.** Before any code, the functional scope (services, booking rules,
   statuses, pricing, service area) was written down in a local specification file. Every task

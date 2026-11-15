@@ -41,3 +41,7 @@ class ServiceUnavailableError(AppError):
 
 class UpstreamServiceError(AppError):
     status_code = 502
+
+
+class TooManyRequestsError(AppError):
+    status_code = 429
