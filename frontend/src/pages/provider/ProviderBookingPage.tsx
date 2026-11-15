@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 
 import ProviderPageHeader from "@/components/layout/provider/ProviderPageHeader";
 import ErrorState from "@/components/ui/ErrorState";
@@ -12,11 +12,19 @@ import { fetchProviderBooking, providerBookingKeys } from "@/features/provider/b
 import AssignResourcesForm from "@/features/provider/bookings/components/AssignResourcesForm";
 import BookingStatusActions from "@/features/provider/bookings/components/BookingStatusActions";
 import HandoverEditor from "@/features/provider/bookings/components/HandoverEditor";
+import RescheduleForm from "@/features/provider/bookings/components/RescheduleForm";
 import { errorMessage, isNotFound } from "@/lib/errors";
 import { formatMoney } from "@/lib/money";
 
+/** Set by the new-booking page: the guest token is returned only once, at creation. */
+function guestLinkFromState(state: unknown): string | null {
+  if (typeof state !== "object" || state === null || !("guestLink" in state)) return null;
+  return typeof state.guestLink === "string" ? state.guestLink : null;
+}
+
 export default function ProviderBookingPage() {
   const { bookingId } = useParams();
+  const guestLink = guestLinkFromState(useLocation().state);
 
   const booking = useQuery({
     queryKey: providerBookingKeys.detail(bookingId ?? ""),
@@ -82,6 +90,16 @@ export default function ProviderBookingPage() {
         actions={<StatusBadge status={data.status} />}
       />
 
+      {guestLink ? (
+        <Notice tone="success" title="Booking created">
+          Send this private link to the customer so they can follow the booking. It is shown
+          only now:{" "}
+          <a href={guestLink} className="break-all font-medium underline">
+            {guestLink}
+          </a>
+        </Notice>
+      ) : null}
+
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
           <BookingDetailsPanel booking={data} />
@@ -90,6 +108,7 @@ export default function ProviderBookingPage() {
 
         <div className="space-y-6">
           <BookingStatusActions booking={data} />
+          <RescheduleForm booking={data} />
           <AssignResourcesForm booking={data} />
           {data.service_type === "self_drive" ? <HandoverEditor booking={data} /> : null}
         </div>

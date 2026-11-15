@@ -14,7 +14,7 @@ from app.modules.availability.service import (
     vehicle_reason,
 )
 from app.modules.bookings.models import Booking, BookingEmployee
-from app.modules.bookings.schemas import AssignResourcesRequest
+from app.modules.bookings.provider_schemas import AssignResourcesRequest
 from app.modules.bookings.status import TERMINAL
 from app.modules.employees.models import Employee
 from app.modules.vehicles.models import Vehicle

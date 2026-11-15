@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, NotFoundError
+from app.modules.bookings.queries import vehicle_has_open_bookings
 from app.modules.vehicles.models import Vehicle
 from app.modules.vehicles.schemas import VehicleCreate, VehicleUpdate
 
@@ -33,7 +34,10 @@ def create_vehicle(db: Session, payload: VehicleCreate) -> Vehicle:
 
 def update_vehicle(db: Session, vehicle_id: UUID, payload: VehicleUpdate) -> Vehicle:
     vehicle = get_vehicle(db, vehicle_id)
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    changes = payload.model_dump(exclude_unset=True)
+    if changes.get("is_active") is False and vehicle.is_active:
+        _ensure_no_open_bookings(db, vehicle)
+    for field, value in changes.items():
         setattr(vehicle, field, value)
     _commit(db)
     db.refresh(vehicle)
@@ -43,8 +47,18 @@ def update_vehicle(db: Session, vehicle_id: UUID, payload: VehicleUpdate) -> Veh
 def deactivate_vehicle(db: Session, vehicle_id: UUID) -> None:
     vehicle = get_vehicle(db, vehicle_id)
     if vehicle.is_active:
+        _ensure_no_open_bookings(db, vehicle)
         vehicle.is_active = False
         _commit(db)
+
+
+def _ensure_no_open_bookings(db: Session, vehicle: Vehicle) -> None:
+    # Deactivating would leave upcoming bookings pointing at a van we no longer offer.
+    if vehicle_has_open_bookings(db, vehicle.id):
+        raise ConflictError(
+            "This vehicle has upcoming or active bookings. "
+            "Move them to another vehicle or close them first."
+        )
 
 
 def _commit(db: Session) -> None:

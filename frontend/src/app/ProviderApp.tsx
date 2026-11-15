@@ -9,6 +9,7 @@ const ProviderLoginPage = lazy(() => import("@/pages/provider/ProviderLoginPage"
 const ProviderDashboardPage = lazy(() => import("@/pages/provider/ProviderDashboardPage"));
 const ProviderBookingsPage = lazy(() => import("@/pages/provider/ProviderBookingsPage"));
 const ProviderBookingPage = lazy(() => import("@/pages/provider/ProviderBookingPage"));
+const ProviderNewBookingPage = lazy(() => import("@/pages/provider/ProviderNewBookingPage"));
 const ProviderVehiclesPage = lazy(() => import("@/pages/provider/ProviderVehiclesPage"));
 const ProviderEmployeesPage = lazy(() => import("@/pages/provider/ProviderEmployeesPage"));
 const ProviderPricingPage = lazy(() => import("@/pages/provider/ProviderPricingPage"));
@@ -40,6 +41,14 @@ export default function ProviderApp() {
             element={
               <PageBoundary>
                 <ProviderBookingsPage />
+              </PageBoundary>
+            }
+          />
+          <Route
+            path="bookings/new/:serviceSlug?"
+            element={
+              <PageBoundary>
+                <ProviderNewBookingPage />
               </PageBoundary>
             }
           />

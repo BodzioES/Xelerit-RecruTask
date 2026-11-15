@@ -1,19 +1,20 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_provider
 from app.db.enums import BookingStatus, ServiceType
 from app.db.session import get_db
-from app.modules.bookings import assignment, service
-from app.modules.bookings.queries import get_booking
-from app.modules.bookings.schemas import (
+from app.modules.bookings import assignment, dashboard, schedule, service
+from app.modules.bookings.provider_schemas import (
     AssignResourcesRequest,
-    BookingRead,
+    BookingReschedule,
     BookingStatusUpdate,
     DashboardRead,
 )
+from app.modules.bookings.queries import get_booking
+from app.modules.bookings.schemas import BookingCreate, BookingCreatedRead, BookingRead
 from app.modules.users.models import User
 
 router = APIRouter(
@@ -25,7 +26,7 @@ router = APIRouter(
 
 @router.get("/dashboard", response_model=DashboardRead)
 def read_dashboard(db: Session = Depends(get_db)) -> DashboardRead:
-    return service.dashboard(db)
+    return dashboard.dashboard(db)
 
 
 @router.get("/bookings", response_model=list[BookingRead])
@@ -48,6 +49,20 @@ def list_bookings(
     return [BookingRead.model_validate(booking) for booking in bookings]
 
 
+@router.post("/bookings", response_model=BookingCreatedRead, status_code=status.HTTP_201_CREATED)
+def create_booking(
+    payload: BookingCreate,
+    user: User = Depends(get_current_provider),
+    db: Session = Depends(get_db),
+) -> BookingCreatedRead:
+    """Enter a booking taken by phone; it starts confirmed and returns the guest link token."""
+    booking, token = service.create_booking(db, payload, provider_id=user.id)
+    return BookingCreatedRead(
+        **BookingRead.model_validate(booking).model_dump(),
+        access_token=token,
+    )
+
+
 @router.patch("/bookings/{booking_id}/status", response_model=BookingRead)
 def update_booking_status(
     booking_id: UUID,
@@ -63,6 +78,18 @@ def update_booking_status(
         provider_id=user.id,
         note=payload.note,
     )
+    return BookingRead.model_validate(booking)
+
+
+@router.patch("/bookings/{booking_id}/schedule", response_model=BookingRead)
+def reschedule_booking(
+    booking_id: UUID,
+    payload: BookingReschedule,
+    user: User = Depends(get_current_provider),
+    db: Session = Depends(get_db),
+) -> BookingRead:
+    booking = get_booking(db, booking_id)
+    booking = schedule.reschedule_booking(db, booking, payload, provider_id=user.id)
     return BookingRead.model_validate(booking)
 
 

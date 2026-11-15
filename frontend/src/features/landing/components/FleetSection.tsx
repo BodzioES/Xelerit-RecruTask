@@ -65,19 +65,24 @@ function FleetCard({ vehicle }: { vehicle: Vehicle }) {
         </dl>
 
         {hasDimensions ? (
-          <p className="text-xs text-ink-500">
-            Cargo area {vehicle.cargo_length_cm} × {vehicle.cargo_width_cm} ×{" "}
-            {vehicle.cargo_height_cm} cm (L × W × H)
-          </p>
+          <div className="text-xs text-ink-500">
+            <p>Cargo area (L × W × H)</p>
+            <p className="mt-0.5 font-medium text-ink-700">
+              {vehicle.cargo_length_cm} × {vehicle.cargo_width_cm} × {vehicle.cargo_height_cm} cm
+            </p>
+          </div>
         ) : null}
 
-        <p className="mt-auto border-t border-slate-200 pt-3 text-sm text-ink-700">
-          Self Drive: {formatMoney(vehicle.hourly_price)}/h
-          <span aria-hidden="true" className="text-slate-300">
-            {" · "}
-          </span>
-          {formatMoney(vehicle.daily_price)}/day
-        </p>
+        <div className="mt-auto border-t border-slate-200 pt-3">
+          <p className="text-xs text-ink-500">Self Drive rates</p>
+          <p className="mt-0.5 whitespace-nowrap text-sm text-ink-700">
+            {formatMoney(vehicle.hourly_price)}/h
+            <span aria-hidden="true" className="text-slate-300">
+              {" · "}
+            </span>
+            {formatMoney(vehicle.daily_price)}/day
+          </p>
+        </div>
       </div>
     </article>
   );

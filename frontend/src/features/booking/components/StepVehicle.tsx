@@ -83,14 +83,6 @@ export default function StepVehicle({ draft, onChange, onNext, onBack }: WizardS
     onNext();
   }
 
-  function toggleOnlyAvailable(checked: boolean): void {
-    setOnlyAvailable(checked);
-    if (checked) {
-      // "Any available van" replaces an explicit choice.
-      onChange({ vehicleId: null, vehicleLabel: null });
-    }
-  }
-
   if (!windowReady) {
     return (
       <div className="space-y-4">
@@ -104,34 +96,40 @@ export default function StepVehicle({ draft, onChange, onNext, onBack }: WizardS
     <form noValidate onSubmit={handleSubmit} className="space-y-6">
       <Panel
         title="Choose your van"
-        description={
-          selfDrive
-            ? "Every van in the fleet is listed — booked ones are marked and cannot be picked."
-            : "Every van in the fleet is listed. Booked ones are marked and cannot be picked."
-        }
+        description="Every van in the fleet is listed. Booked ones are marked and cannot be picked."
       >
+        <label className="mb-4 flex cursor-pointer items-center gap-2 text-sm font-medium text-ink-700">
+          <input
+            type="checkbox"
+            className="size-4 rounded accent-brand-600"
+            checked={onlyAvailable}
+            onChange={(event) => setOnlyAvailable(event.target.checked)}
+          />
+          Show only vans available for my dates
+        </label>
+
         {!selfDrive ? (
           <label
             className={[
               "mb-4 flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition",
               "focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-600",
-              onlyAvailable
+              draft.vehicleId === null
                 ? "border-brand-500 bg-brand-50 ring-1 ring-brand-500"
                 : "border-slate-200 bg-white hover:border-brand-200",
             ].join(" ")}
           >
             <input
-              type="checkbox"
-              className="mt-1 size-4 rounded accent-brand-600"
-              checked={onlyAvailable}
-              onChange={(event) => toggleOnlyAvailable(event.target.checked)}
+              type="radio"
+              name="vehicle"
+              className="mt-1 size-4 accent-brand-600"
+              checked={draft.vehicleId === null}
+              onChange={() => onChange({ vehicleId: null, vehicleLabel: null })}
             />
             <span>
               <span className="block font-semibold text-ink-900">Any available van</span>
               <span className="mt-0.5 block text-sm text-ink-500">
-                {onlyAvailable
-                  ? "Only vans free for your dates are shown. We assign the best fit when the booking is created."
-                  : "Tick this to list only the vans that are free for your dates. We then assign the best fit."}
+                We assign the best free van when the booking is created. Or pick a specific van
+                below.
               </span>
             </span>
           </label>

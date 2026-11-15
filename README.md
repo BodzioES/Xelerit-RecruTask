@@ -199,11 +199,11 @@ validated against the `provider` role; guest and customer routes stay public.
 | GET | `/api/v1/provider/vehicles` | Provider | Full fleet, including inactive |
 | POST | `/api/v1/provider/vehicles` | Provider | Add a vehicle |
 | PATCH | `/api/v1/provider/vehicles/{id}` | Provider | Edit or reactivate a vehicle |
-| DELETE | `/api/v1/provider/vehicles/{id}` | Provider | Deactivate a vehicle |
+| DELETE | `/api/v1/provider/vehicles/{id}` | Provider | Deactivate a vehicle (`409` while it has open bookings) |
 | GET | `/api/v1/provider/employees` | Provider | List employees, including inactive |
 | POST | `/api/v1/provider/employees` | Provider | Add an employee |
 | PATCH | `/api/v1/provider/employees/{id}` | Provider | Edit, reactivate or change a role |
-| DELETE | `/api/v1/provider/employees/{id}` | Provider | Deactivate an employee |
+| DELETE | `/api/v1/provider/employees/{id}` | Provider | Deactivate an employee (`409` while assigned to open bookings) |
 | GET | `/api/v1/availability/vehicles` | — | Vehicles free for a time window |
 | GET | `/api/v1/availability/employees` | — | Employees free for a time window |
 | POST | `/api/v1/availability/check` | — | Check one vehicle and a set of employees |
@@ -224,9 +224,11 @@ validated against the `provider` role; guest and customer routes stay public.
 | POST | `/api/v1/bookings` | — | Create a guest booking |
 | GET | `/api/v1/bookings/{id}` | Guest token or Provider | Booking details |
 | PATCH | `/api/v1/bookings/{id}/cancel` | Guest token | Cancel a booking before it starts |
-| GET | `/api/v1/provider/dashboard` | Provider | New, upcoming and active bookings plus available vehicles |
+| GET | `/api/v1/provider/dashboard` | Provider | New, overdue, upcoming and active bookings plus available vehicles |
 | GET | `/api/v1/provider/bookings` | Provider | Paginated booking list with status, service and assigned-employee filters |
+| POST | `/api/v1/provider/bookings` | Provider | Enter a phone booking; it starts `confirmed` and returns the guest token |
 | PATCH | `/api/v1/provider/bookings/{id}/status` | Provider | Controlled status transition |
+| PATCH | `/api/v1/provider/bookings/{id}/schedule` | Provider | Move a booking to a new window and recalculate its price |
 | POST | `/api/v1/provider/bookings/{id}/assign-resources` | Provider | Reassign the vehicle and staff |
 | POST | `/api/v1/bookings/{id}/handover` | Provider | Generate a lockbox code and set handover instructions |
 | GET | `/api/v1/bookings/{id}/handover` | Guest token or Provider | Handover details; the guest sees them only when prepared |
@@ -402,6 +404,22 @@ without deleting the assignment history. The Provider can reassign resources thr
 `POST /provider/bookings/{id}/assign-resources`; the same availability checks and database
 exclusion constraints apply.
 
+The Provider can also run the booking side of the business from the panel:
+
+- **Phone bookings.** `POST /provider/bookings` takes the same payload as a guest booking and runs
+  the same service-area, pricing and availability checks. The booking starts `confirmed`, the
+  history records the Provider as its author, and the response contains the guest token so the
+  panel can show a private link to send to the customer.
+- **Rescheduling.** `PATCH /provider/bookings/{id}/schedule` moves a `pending`, `confirmed` or
+  `ready_for_pickup` booking to a new future window. The assigned vehicle and staff stay the
+  same and must be free in the new window (otherwise `409`, so reassign them first). The price is
+  recalculated from the current rules and the change is recorded in the history.
+- **Safe deactivation.** A vehicle or employee with an open booking (not completed, rejected or
+  cancelled, and not over yet) cannot be deactivated, and an assigned employee cannot change
+  role. The API returns `409` until those bookings are reassigned or closed.
+- **Overdue bookings.** The dashboard lists confirmed bookings whose start time has passed
+  without "Start service" separately, so they are not lost between "upcoming" and "in progress".
+
 ### Handover and lockbox codes
 
 For Self Drive, the Provider prepares the physical lockbox handover with
@@ -428,9 +446,10 @@ The SPA is served by nginx with an `/index.html` fallback, so deep links can be 
 | `/book/{self-drive,van-driver,full-moving}` | Step-by-step booking wizard |
 | `/booking/{id}?token=…` | Booking confirmation, status timeline, cancellation and handover |
 | `/provider/login` | Provider sign-in |
-| `/provider` | Dashboard: new, upcoming and active bookings plus available vehicles |
+| `/provider` | Dashboard: new, overdue, upcoming and active bookings plus available vehicles |
 | `/provider/bookings` | Booking list with status, service and assigned-employee filters |
-| `/provider/bookings/{id}` | Booking detail: timeline, status actions, resource assignment, handover |
+| `/provider/bookings/new` | Phone booking: the same wizard as guests use, created as confirmed |
+| `/provider/bookings/{id}` | Booking detail: timeline, status actions, rescheduling, resource assignment, handover |
 | `/provider/vehicles` | Fleet management (add, edit, deactivate, downtime blocks) |
 | `/provider/employees` | Employee management (add, edit, deactivate, unavailability blocks) |
 | `/provider/pricing` | Pricing-rule editor for all three services |
@@ -477,6 +496,10 @@ handover are rendered from one set of components on both sides.
 - Self Drive has no mileage limit or overage fee. Only the pickup and return points are checked
   against the service area, so the van can be driven outside it during the rental. A per-day
   kilometre allowance, an overage rate and an odometer field would be the natural next step.
+- Status changes are not tied to the clock: the Provider decides when a service starts or ends,
+  so a booking can be completed early. Overdue bookings are highlighted on the dashboard instead.
+- The optional `additional_service` flag is priced at creation but not stored on the booking, so
+  rescheduling recalculates the price without it. The booking wizard never sets it.
 
 ## Possible extensions
 

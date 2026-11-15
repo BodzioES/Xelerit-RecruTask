@@ -4,11 +4,13 @@ import type {
   AvailableEmployee,
   AvailableVehicle,
   Booking,
+  BookingCreated,
   BookingStatus,
   EmployeeRole,
   HandoverDetails,
   ServiceType,
 } from "@/types/api";
+import type { CreateBookingRequest } from "@/features/booking/types";
 
 import { providerGet, providerPatch, providerPost } from "../apiClient";
 
@@ -118,4 +120,19 @@ export function saveProviderHandover(
   payload: HandoverPayload,
 ): Promise<HandoverDetails> {
   return providerPost(`/bookings/${bookingId}/handover`, payload);
+}
+
+export function rescheduleBooking(
+  bookingId: string,
+  startDatetime: string,
+  endDatetime: string,
+): Promise<Booking> {
+  return providerPatch(`/provider/bookings/${bookingId}/schedule`, {
+    start_datetime: startDatetime,
+    end_datetime: endDatetime,
+  });
+}
+
+export function createProviderBooking(request: CreateBookingRequest): Promise<BookingCreated> {
+  return providerPost("/provider/bookings", request);
 }

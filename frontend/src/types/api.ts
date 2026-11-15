@@ -282,6 +282,7 @@ export type BookingSummary = {
 
 export type ProviderDashboard = {
   new_bookings: BookingSummary[];
+  overdue_bookings: BookingSummary[];
   upcoming_bookings: BookingSummary[];
   active_bookings: BookingSummary[];
   available_vehicles: BookingVehicle[];

@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 import ProviderPageHeader from "@/components/layout/provider/ProviderPageHeader";
+import { buttonClassName } from "@/components/ui/Button";
 import ErrorState from "@/components/ui/ErrorState";
 import LoadingState from "@/components/ui/LoadingState";
+import Notice from "@/components/ui/Notice";
 import { dashboardKeys, fetchProviderDashboard } from "@/features/provider/dashboard/api";
 import AvailableVehicles from "@/features/provider/dashboard/components/AvailableVehicles";
 import BookingSummaryList from "@/features/provider/dashboard/components/BookingSummaryList";
@@ -19,7 +22,28 @@ export default function ProviderDashboardPage() {
       <ProviderPageHeader
         title="Dashboard"
         description="What needs attention today across bookings and the fleet."
+        actions={
+          <Link to="/provider/bookings/new" className={buttonClassName("primary")}>
+            New booking
+          </Link>
+        }
       />
+
+      {dashboard.data && dashboard.data.overdue_bookings.length > 0 ? (
+        <div className="space-y-3">
+          <Notice tone="warning" title="Overdue bookings">
+            These services should have started already. Start them, reschedule them or cancel
+            them.
+          </Notice>
+          <BookingSummaryList
+            title="Overdue"
+            description="Confirmed bookings whose start time has passed."
+            bookings={dashboard.data.overdue_bookings}
+            emptyTitle="Nothing overdue"
+            emptyDescription="Every confirmed booking is on time."
+          />
+        </div>
+      ) : null}
 
       {dashboard.isPending ? <LoadingState label="Loading dashboard" rows={4} /> : null}
 

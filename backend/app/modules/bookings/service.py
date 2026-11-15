@@ -1,11 +1,10 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import Select, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.elements import UnaryExpression
 
 from app.core.exceptions import ConflictError, ValidationError
 from app.core.money import ZERO, money
@@ -15,7 +14,6 @@ from app.db.enums import (
     LocationType,
     ServiceType,
 )
-from app.modules.availability.service import list_available_vehicles
 from app.modules.bookings import assignment, status
 from app.modules.bookings.access import create_guest_token
 from app.modules.bookings.models import (
@@ -26,13 +24,10 @@ from app.modules.bookings.models import (
     BookingLocation,
     BookingMovingDetails,
 )
-from app.modules.bookings.queries import booking_load_options, summary_load_options
+from app.modules.bookings.queries import booking_load_options
 from app.modules.bookings.schemas import (
     BookingCreate,
     BookingLocationInput,
-    BookingSummaryRead,
-    BookingVehicleRead,
-    DashboardRead,
 )
 from app.modules.locations.service import service_area_status
 from app.modules.pricing.schemas import PricingQuoteRead, PricingQuoteRequest, QuoteLocation
@@ -41,11 +36,16 @@ from app.modules.pricing.service import calculate_quote
 BASE_PRICE_CODES = frozenset({"base_price", "hourly_rate", "daily_rate", "distance"})
 
 
-def create_booking(db: Session, payload: BookingCreate) -> tuple[Booking, str]:
+def create_booking(
+    db: Session, payload: BookingCreate, *, provider_id: UUID | None = None
+) -> tuple[Booking, str]:
+    """Create a booking; when the Provider enters it (e.g. by phone) it starts confirmed."""
     _validate_service_area(payload)
+    by_provider = provider_id is not None
+    initial_status = BookingStatus.CONFIRMED if by_provider else BookingStatus.PENDING
     quote = _calculate_quote(db, payload)
     token, token_hash = create_guest_token()
-    base_price, extras_price = _split_prices(quote)
+    base_price, extras_price = split_prices(quote)
 
     booking = Booking(
         booking_number=_next_booking_number(db, payload.start_datetime),
@@ -56,7 +56,7 @@ def create_booking(db: Session, payload: BookingCreate) -> tuple[Booking, str]:
         service_type=payload.service_type,
         start_datetime=payload.start_datetime,
         end_datetime=payload.end_datetime,
-        status=BookingStatus.PENDING,
+        status=initial_status,
         base_price=base_price,
         extras_price=extras_price,
         total_price=money(quote.total),
@@ -79,9 +79,10 @@ def create_booking(db: Session, payload: BookingCreate) -> tuple[Booking, str]:
     booking.events = [
         BookingEvent(
             previous_status=None,
-            new_status=BookingStatus.PENDING,
-            changed_by=BookingActor.CUSTOMER,
-            note="Booking created",
+            new_status=initial_status,
+            changed_by=BookingActor.PROVIDER if by_provider else BookingActor.CUSTOMER,
+            changed_by_user_id=provider_id,
+            note="Booking created by the provider" if by_provider else "Booking created",
         )
     ]
 
@@ -167,49 +168,6 @@ def _assigned_booking_ids(employee_id: UUID) -> Select[tuple[UUID]]:
     )
 
 
-def dashboard(db: Session) -> DashboardRead:
-    now = datetime.now(UTC)
-    new_bookings = _summary_list(
-        db,
-        statuses=[BookingStatus.PENDING],
-        order_by=Booking.created_at.desc(),
-    )
-    upcoming = _summary_list(
-        db,
-        statuses=[BookingStatus.CONFIRMED, BookingStatus.READY_FOR_PICKUP],
-        start_after=now,
-        order_by=Booking.start_datetime.asc(),
-    )
-    active = _summary_list(
-        db,
-        statuses=[BookingStatus.IN_PROGRESS],
-        order_by=Booking.start_datetime.asc(),
-    )
-    vehicles = list_available_vehicles(db, now, now + timedelta(hours=1))[:10]
-
-    return DashboardRead(
-        new_bookings=[BookingSummaryRead.model_validate(item) for item in new_bookings],
-        upcoming_bookings=[BookingSummaryRead.model_validate(item) for item in upcoming],
-        active_bookings=[BookingSummaryRead.model_validate(item) for item in active],
-        available_vehicles=[BookingVehicleRead.model_validate(item) for item in vehicles],
-    )
-
-
-def _summary_list(
-    db: Session,
-    *,
-    statuses: list[BookingStatus],
-    order_by: UnaryExpression[datetime],
-    start_after: datetime | None = None,
-    limit: int = 10,
-) -> list[Booking]:
-    statement = select(Booking).options(*summary_load_options()).where(Booking.status.in_(statuses))
-    if start_after is not None:
-        statement = statement.where(Booking.start_datetime >= start_after)
-    statement = statement.order_by(order_by).limit(limit)
-    return list(db.scalars(statement))
-
-
 def _calculate_quote(db: Session, payload: BookingCreate) -> PricingQuoteRead:
     origin, destination = _route_points(payload)
     request = PricingQuoteRequest(
@@ -252,7 +210,7 @@ def _validate_service_area(payload: BookingCreate) -> None:
             raise ValidationError(f"Location is outside the service area: {location.address}")
 
 
-def _split_prices(quote: PricingQuoteRead) -> tuple[Decimal, Decimal]:
+def split_prices(quote: PricingQuoteRead) -> tuple[Decimal, Decimal]:
     base = sum(
         (line.amount for line in quote.lines if line.code in BASE_PRICE_CODES),
         ZERO,

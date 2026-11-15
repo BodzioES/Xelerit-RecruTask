@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import ProviderPageHeader from "@/components/layout/provider/ProviderPageHeader";
-import Button from "@/components/ui/Button";
+import Button, { buttonClassName } from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorState from "@/components/ui/ErrorState";
 import LoadingState from "@/components/ui/LoadingState";
@@ -84,9 +84,17 @@ export default function ProviderBookingsPage() {
         title="Bookings"
         description="Review requests, keep statuses up to date and assign resources."
         actions={
-          <Link to="/provider/employees" className="text-sm font-medium text-brand-700 hover:underline">
-            Manage team
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              to="/provider/employees"
+              className="text-sm font-medium text-brand-700 hover:underline"
+            >
+              Manage team
+            </Link>
+            <Link to="/provider/bookings/new" className={buttonClassName("primary")}>
+              New booking
+            </Link>
+          </div>
         }
       />
 
