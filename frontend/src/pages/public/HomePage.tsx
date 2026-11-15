@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 
 import { buttonClassName } from "@/components/ui/Button";
+import AfterBookingSection from "@/features/landing/components/AfterBookingSection";
+import HowItWorksSection from "@/features/landing/components/HowItWorksSection";
 import { SERVICES } from "@/lib/services";
 
 const heroCallButton =
@@ -81,7 +83,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-white">
+      <HowItWorksSection />
+
+      <section id="services" className="border-y border-slate-200 bg-white">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
@@ -147,7 +151,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-50">
+      <section id="pricing" className="bg-slate-50">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
@@ -181,6 +185,8 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+
+      <AfterBookingSection />
     </>
   );
 }
