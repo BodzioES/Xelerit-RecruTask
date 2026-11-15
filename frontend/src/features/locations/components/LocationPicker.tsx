@@ -35,7 +35,11 @@ export default function LocationPicker({ label, hint, error, required, value, on
   const [lookupNote, setLookupNote] = useState<string | null>(null);
 
   const debounced = useDebouncedValue(query.trim(), 350);
-  const searchEnabled = debounced.length >= 3 && debounced !== value.address.trim();
+  // Only skip the lookup when the text already describes the confirmed point;
+  // typing resets the point, so free text keeps searching for suggestions.
+  const confirmedAddress =
+    value.latitude !== null && value.longitude !== null ? value.address.trim() : "";
+  const searchEnabled = debounced.length >= 3 && debounced !== confirmedAddress;
   const search = useQuery({
     queryKey: locationKeys.search(debounced),
     queryFn: () => searchLocations(debounced),
