@@ -149,14 +149,17 @@ export default function StepSummary({
             required
           />
           <span>
-            I confirm the details above are correct
-            <span aria-hidden="true" className="ml-0.5 font-semibold text-rose-600">
-              *
+            <span className="block font-medium text-ink-900">
+              I confirm the details above are correct
+              <span aria-hidden="true" className="ml-1 text-rose-600">
+                *
+              </span>
             </span>
-            . I understand that the booking is created with the{" "}
-            <strong className="font-semibold">Pending review</strong> status and the Provider
-            confirms it before the service starts. I can cancel it from the booking page until the
-            service begins.
+            <span className="mt-1 block text-sm text-ink-500">
+              The booking is created with the <strong className="font-semibold">Pending review</strong>{" "}
+              status and the Provider confirms it before the service starts. You can cancel it from
+              the booking page until the service begins.
+            </span>
           </span>
         </label>
       </Panel>
