@@ -2,7 +2,7 @@
 
 A booking platform for one moving and van company in the Tri-City area (Gdańsk, Gdynia, Sopot,
 up to ~30 km around). Customers book one of three services without an account, and the company
-runs everything from a Provider panel. Built as a full-stack MVP for a recruitment task.
+runs everything from a Provider panel.
 
 ## Features
 
@@ -180,18 +180,67 @@ Customer text is untrusted, so it is defended in layers:
 - The AI rate limit is in memory of a single API process and trusts the `X-Real-IP` header set by
   nginx.
 
-## AI usage
+## How I worked
 
-The project was built with **Claude Code** as a coding assistant. Inside the app, AI powers only
-the [move assistant](#ai-move-assistant).
+The project took me about four days. I used Claude Code and OpenCode as programming assistants.
+I primarily relied on them to generate code, which I then reviewed and analyzed to ensure it
+aligned with the architecture I had defined in the project guidelines.
 
-- **Specification first:** the functional scope (services, booking rules, statuses, pricing,
-  service area) was written down before any code, and every task referred to it.
-- **Rules for the agent:** [`AGENTS.md`](AGENTS.md) and [`docs/agents/`](docs/agents/) define the
-  code standards (file and function size, one responsibility per file, `Decimal` for money, the
-  server owning prices, no dead code) and the checks that must pass. They are committed so the
-  setup can be reviewed.
-- **Small, verified steps:** each step was checked with `ruff`, `pytest` and the TypeScript build
-  before committing.
-- **Human review:** generated code was read, tested in the browser and corrected. Business
-  decisions (pricing, status flow, handover, MVP scope) were made by me.
+### Specification first, code second
+
+Before writing any code, I defined the functional scope: three services, booking rules, status
+workflows, a pricing mechanism and the service coverage area. Every task assigned to the AI
+assistant referenced this document. Whenever an AI suggestion deviated from the specification, I
+could point to specific agreed-upon requirements rather than relying on memory. The specification
+is stored locally and is not part of the repository.
+
+### Rules for the agent
+
+After setting up the project skeleton, I created an [`AGENTS.md`](AGENTS.md) file along with
+thematic guides in the [`docs/agents/`](docs/agents/) directory. They serve as a contract between
+me and the AI assistant and specify, among other things:
+
+- target file and function sizes,
+- the Single Responsibility Principle (one file, one task),
+- the `Decimal` type for monetary values,
+- time handled in UTC with time zones taken into account,
+- a ban on dead code,
+- a checklist to complete before committing any change.
+
+A key principle was that **the server is the source of truth**: prices, availability and statuses
+are calculated on the backend, while the frontend is responsible solely for presenting them. The
+files are committed to the repository, so anyone can see how they are written.
+
+### Sequence of work
+
+I began with the backend domain and built it module by module: database schema and migrations,
+authentication and fleet management, the availability engine, the pricing mechanism, location
+search and finally the reservation process, including status management and key handover via
+lockboxes.
+
+I added the reservation wizard and the provider panel only once the server could calculate prices
+and check availability on its own. This ensured that the user interface did not take on any
+business logic.
+
+### My workflow for each change
+
+1. I define the objective and constraints, referencing the relevant section of the specification
+   and the appropriate guide.
+2. I review the action plan prepared by the assistant before it writes any code. If the plan
+   extends beyond a specific module or introduces elements outside the MVP requirements, I adjust
+   it.
+3. I let it execute one small step.
+4. I run `ruff`, `pytest` and the TypeScript build, then test the user journey in a browser.
+5. I review the diff and commit only one specific aspect at a time.
+
+Many `fix:` commits come precisely from this manual testing phase, for instance enforcing the rules
+for moving bookings and key handovers, or keeping address suggestions working while a user is
+typing.
+
+### User interface
+
+The homepage and the reservation wizard were developed through numerous small iterations. I would
+check the result in the browser, request adjustments and occasionally roll changes back if they
+did not work well in practice (for instance, I removed one section and later brought it back in a
+simpler form). This is where AI saved me the most time, as trying out layout ideas became fast and
+cheap.
