@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 
 import { buttonClassName } from "@/components/ui/Button";
-import AfterBookingSection from "@/features/landing/components/AfterBookingSection";
 import HowItWorksSection from "@/features/landing/components/HowItWorksSection";
 import { SERVICES } from "@/lib/services";
 
@@ -102,9 +101,9 @@ export default function HomePage() {
             {SERVICES.map((service) => (
               <article
                 key={service.slug}
-                className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 p-6"
+                className="flex h-full flex-col rounded-2xl border border-slate-200 bg-slate-50 p-6"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <h3 className="text-lg font-semibold text-ink-900">{service.name}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-ink-700">{service.summary}</p>
@@ -114,7 +113,7 @@ export default function HomePage() {
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
-                    className="size-24 shrink-0 object-contain"
+                    className="size-32 shrink-0 object-contain lg:size-36"
                   />
                 </div>
 
@@ -130,7 +129,7 @@ export default function HomePage() {
                   ))}
                 </ul>
 
-                <p className="mt-4 border-t border-slate-200 pt-4 text-sm leading-relaxed text-ink-500">
+                <p className="mt-auto border-t border-slate-200 pt-4 text-sm leading-relaxed text-ink-500">
                   {service.pricing}
                 </p>
 
@@ -153,7 +152,7 @@ export default function HomePage() {
 
       <section id="pricing" className="bg-slate-50">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
-          <div className="max-w-2xl">
+          <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
               How the price is calculated
             </h2>
@@ -180,13 +179,11 @@ export default function HomePage() {
             ))}
           </div>
 
-          <p className="mt-6 text-sm text-ink-500">
+          <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-ink-500">
             Prices are in PLN. The quote step lists every line before you place the booking.
           </p>
         </div>
       </section>
-
-      <AfterBookingSection />
     </>
   );
 }

@@ -386,7 +386,7 @@ The SPA is served by nginx with an `/index.html` fallback, so deep links can be 
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Landing page: hero, how it works, the three services, the pricing method and the post-booking page |
+| `/` | Landing page: hero, how our company works, the three services and the pricing method |
 | `/book/{self-drive,van-driver,full-moving}` | Step-by-step booking wizard |
 | `/booking/{id}?token=…` | Booking confirmation, status timeline, cancellation and handover |
 | `/provider/login` | Provider sign-in |
